@@ -70,6 +70,20 @@ class TestCli(unittest.TestCase):
         params = cli.build_video_params(args)
         self.assertEqual(params.video_source, "coverr")
 
+    def test_content_preset_is_passed_to_video_params(self):
+        args = cli.parse_args(
+            [
+                "--video-subject",
+                "World Cup short",
+                "--content-preset",
+                "worldcup_shorts",
+            ]
+        )
+
+        params = cli.build_video_params(args)
+
+        self.assertEqual(params.content_preset, "worldcup_shorts")
+
     def test_build_video_params_with_script_video_and_audio_options(self):
         args = cli.parse_args(
             [

@@ -84,6 +84,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         description="MoneyPrinterTurbo command line video generation"
     )
     parser.add_argument("--video-subject", required=True, help="video subject")
+    parser.add_argument(
+        "--content-preset",
+        default="",
+        choices=["", "worldcup_shorts"],
+        help="optional content preset",
+    )
     parser.add_argument("--video-script", default="", help="custom script")
     parser.add_argument("--video-terms", default=None, help="comma-separated terms")
     parser.add_argument(
@@ -270,6 +276,7 @@ def build_video_params(args: argparse.Namespace) -> VideoParams:
 
     params_kwargs = {
         "video_subject": args.video_subject,
+        "content_preset": args.content_preset,
         "video_script": args.video_script,
         "video_terms": video_terms,
         "video_source": args.video_source,

@@ -10,6 +10,7 @@ from app.models import const
 from app.models.schema import VideoConcatMode, VideoParams
 from app.services import llm, material, subtitle, twelvelabs, video, voice, upload_post
 from app.services import state as sm
+from app.services import worldcup
 from app.utils import file_security, utils
 
 
@@ -332,6 +333,9 @@ def generate_final_videos(
 def start(task_id, params: VideoParams, stop_at: str = "video"):
     logger.info(f"start task: {task_id}, stop_at: {stop_at}")
     sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=5)
+
+    if getattr(params, "content_preset", "") == worldcup.CONTENT_PRESET:
+        params = worldcup.apply_worldcup_defaults(params)
 
     # 1. Generate script
     video_script = generate_script(task_id, params)

@@ -75,6 +75,25 @@ class TestTaskService(unittest.TestCase):
             match_script_order=True,
         )
     
+    def test_start_applies_worldcup_preset_only_when_requested(self):
+        params = VideoParams(
+            video_subject="Morocco 2022 run",
+            video_script="A manual World Cup narration.",
+            content_preset="worldcup_shorts",
+            subtitle_enabled=False,
+            video_aspect="16:9",
+        )
+
+        with patch.object(tm.sm.state, "update_task"):
+            result = tm.start("worldcup-preset-task", params, stop_at="script")
+
+        self.assertEqual(result, {"script": "A manual World Cup narration."})
+        self.assertEqual(params.video_aspect, "9:16")
+        self.assertEqual(params.video_language, "en")
+        self.assertTrue(params.subtitle_enabled)
+        self.assertTrue(params.match_materials_to_script)
+        self.assertIn("football stadium crowd", params.video_terms)
+
     def test_generate_audio_uses_custom_file_inside_task_directory(self):
         task_id = "test-custom-audio-safe"
         task_dir = utils.task_dir(task_id)
