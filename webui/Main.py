@@ -23,7 +23,7 @@ from app.models.schema import (
     VideoParams,
     VideoTransitionMode,
 )
-from app.services import llm, voice
+from app.services import llm, voice, worldcup
 from app.services import task as tm
 from app.utils import utils
 
@@ -775,6 +775,26 @@ params.match_materials_to_script = bool(
 uploaded_files = []
 uploaded_audio_file = None
 
+content_presets = [
+    (tr("Standard Video"), ""),
+    (tr("World Cup Shorts"), worldcup.CONTENT_PRESET),
+]
+selected_preset_index = st.selectbox(
+    tr("Content Preset"),
+    options=range(len(content_presets)),
+    format_func=lambda index: content_presets[index][0],
+    key="content_preset_selector",
+)
+params.content_preset = content_presets[selected_preset_index][1]
+is_worldcup_shorts = params.content_preset == worldcup.CONTENT_PRESET
+
+if is_worldcup_shorts:
+    st.info(tr("World Cup Shorts Preset Help"))
+    if not worldcup.has_video_terms(st.session_state.get("video_terms")):
+        st.session_state["video_terms"] = ", ".join(
+            worldcup.DEFAULT_SAFE_BROLL_TERMS
+        )
+
 with left_panel:
     with st.container(border=True):
         st.write(tr("Video Script Settings"))
@@ -789,15 +809,22 @@ with left_panel:
         for code in support_locales:
             video_languages.append((code, code))
 
+        english_language_index = next(
+            index
+            for index, (_, code) in enumerate(video_languages)
+            if code == "en-US"
+        )
         selected_index = st.selectbox(
             tr("Script Language"),
-            index=0,
-            options=range(
-                len(video_languages)
-            ),  # Use the index as the internal option value
-            format_func=lambda x: video_languages[x][
-                0
-            ],  # The label is displayed to the user
+            index=english_language_index if is_worldcup_shorts else 0,
+            options=range(len(video_languages)),
+            format_func=lambda x: video_languages[x][0],
+            disabled=is_worldcup_shorts,
+            key=(
+                "worldcup_script_language"
+                if is_worldcup_shorts
+                else "standard_script_language"
+            ),
         )
         params.video_language = video_languages[selected_index][1]
 
@@ -838,6 +865,8 @@ with left_panel:
             tr("Generate Video Script and Keywords"), key="auto_generate_script"
         ):
             with st.spinner(tr("Generating Video Script and Keywords")):
+                if is_worldcup_shorts:
+                    worldcup.apply_worldcup_defaults(params)
                 script = llm.generate_script(
                     video_subject=params.video_subject,
                     language=params.video_language,
@@ -845,12 +874,15 @@ with left_panel:
                     video_script_prompt=params.video_script_prompt,
                     custom_system_prompt=params.custom_system_prompt,
                 )
-                terms = llm.generate_terms(
-                    params.video_subject,
-                    script,
-                    amount=8 if params.match_materials_to_script else 5,
-                    match_script_order=params.match_materials_to_script,
-                )
+                if is_worldcup_shorts:
+                    terms = list(worldcup.DEFAULT_SAFE_BROLL_TERMS)
+                else:
+                    terms = llm.generate_terms(
+                        params.video_subject,
+                        script,
+                        amount=8 if params.match_materials_to_script else 5,
+                        match_script_order=params.match_materials_to_script,
+                    )
                 if "Error: " in script:
                     st.error(tr(script))
                 elif "Error: " in terms:
@@ -861,7 +893,9 @@ with left_panel:
         params.video_script = st.text_area(
             tr("Video Script"), value=st.session_state["video_script"], height=280
         )
-        if st.button(tr("Generate Video Keywords"), key="auto_generate_terms"):
+        if not is_worldcup_shorts and st.button(
+            tr("Generate Video Keywords"), key="auto_generate_terms"
+        ):
             if not params.video_script:
                 st.error(tr("Please Enter the Video Subject"))
                 st.stop()
@@ -881,6 +915,8 @@ with left_panel:
         params.video_terms = st.text_area(
             tr("Video Keywords"), value=st.session_state["video_terms"]
         )
+        if is_worldcup_shorts:
+            st.caption(tr("World Cup Stock Terms Help"))
 
 with middle_panel:
     with st.container(border=True):
@@ -898,11 +934,18 @@ with middle_panel:
             (tr("Bilibili"), "bilibili"),
             (tr("Xiaohongshu"), "xiaohongshu"),
         ]
+        if is_worldcup_shorts:
+            video_sources = [
+                source
+                for source in video_sources
+                if source[1] in worldcup.SAFE_STOCK_SOURCES
+            ]
 
         saved_video_source_name = config.app.get("video_source", "pexels")
-        saved_video_source_index = [v[1] for v in video_sources].index(
-            saved_video_source_name
-        )
+        saved_video_source_values = [source[1] for source in video_sources]
+        if saved_video_source_name not in saved_video_source_values:
+            saved_video_source_name = "pexels"
+        saved_video_source_index = saved_video_source_values.index(saved_video_source_name)
 
         selected_index = st.selectbox(
             tr("Video Source"),
@@ -911,7 +954,8 @@ with middle_panel:
             index=saved_video_source_index,
         )
         params.video_source = video_sources[selected_index][1]
-        config.app["video_source"] = params.video_source
+        if not is_worldcup_shorts:
+            config.app["video_source"] = params.video_source
 
         if params.video_source == "local":
             # Streamlit 的文件类型校验对扩展名大小写敏感，这里同时放行大小写两种形式。
@@ -924,13 +968,19 @@ with middle_panel:
 
         selected_index = st.selectbox(
             tr("Video Concat Mode"),
-            index=1,
+            index=0 if is_worldcup_shorts else 1,
             options=range(
                 len(video_concat_modes)
             ),  # Use the index as the internal option value
             format_func=lambda x: video_concat_modes[x][
                 0
             ],  # The label is displayed to the user
+            disabled=is_worldcup_shorts,
+            key=(
+                "worldcup_concat_mode"
+                if is_worldcup_shorts
+                else "standard_concat_mode"
+            ),
         )
         params.video_concat_mode = VideoConcatMode(
             video_concat_modes[selected_index][1]
@@ -974,13 +1024,20 @@ with middle_panel:
             format_func=lambda x: video_aspect_ratios[x][
                 0
             ],  # The label is displayed to the user
-            index=default_aspect_index,
-            key=f"video_aspect_for_{params.video_source}",
+            index=0 if is_worldcup_shorts else default_aspect_index,
+            disabled=is_worldcup_shorts,
+            key=(
+                "worldcup_video_aspect"
+                if is_worldcup_shorts
+                else f"video_aspect_for_{params.video_source}"
+            ),
         )
         params.video_aspect = VideoAspect(video_aspect_ratios[selected_index][1])
 
         params.video_clip_duration = st.selectbox(
-            tr("Clip Duration"), options=[2, 3, 4, 5, 6, 7, 8, 9, 10], index=1
+            tr("Clip Duration"),
+            options=[2, 3, 4, 5, 6, 7, 8, 9, 10],
+            index=2 if is_worldcup_shorts else 1,
         )
         params.video_count = st.selectbox(
             tr("Number of Videos Generated Simultaneously"),
@@ -991,12 +1048,23 @@ with middle_panel:
         with st.expander(tr("Advanced Video Settings"), expanded=False):
             # 默认关闭，避免影响老用户的随机素材体验。开启后只改变关键词和素材
             # 下载/拼接顺序，用于改善画面主题早于或晚于旁白的问题。
-            params.match_materials_to_script = st.checkbox(
-                tr("Match Materials to Script Order"),
-                help=tr("Match Materials to Script Order Help"),
-                key="match_materials_to_script",
-            )
-            config.app["match_materials_to_script"] = params.match_materials_to_script
+            if is_worldcup_shorts:
+                params.match_materials_to_script = st.checkbox(
+                    tr("Match Materials to Script Order"),
+                    value=True,
+                    help=tr("Match Materials to Script Order Help"),
+                    disabled=True,
+                    key="worldcup_match_materials_to_script",
+                )
+            else:
+                params.match_materials_to_script = st.checkbox(
+                    tr("Match Materials to Script Order"),
+                    help=tr("Match Materials to Script Order Help"),
+                    key="match_materials_to_script",
+                )
+                config.app["match_materials_to_script"] = (
+                    params.match_materials_to_script
+                )
 
             video_codec_options = [
                 ("libx264 (CPU)", "libx264"),
@@ -1458,7 +1526,16 @@ with middle_panel:
 with right_panel:
     with st.container(border=True):
         st.write(tr("Subtitle Settings"))
-        params.subtitle_enabled = st.checkbox(tr("Enable Subtitles"), value=True)
+        params.subtitle_enabled = st.checkbox(
+            tr("Enable Subtitles"),
+            value=True,
+            disabled=is_worldcup_shorts,
+            key=(
+                "worldcup_subtitle_enabled"
+                if is_worldcup_shorts
+                else "standard_subtitle_enabled"
+            ),
+        )
         font_names = get_all_fonts()
         saved_font_name = config.ui.get("font_name", "MicrosoftYaHeiBold.ttc")
         saved_font_name_index = 0

@@ -46,6 +46,13 @@ class TestWorldCupPreset(unittest.TestCase):
         self.assertEqual(params.custom_system_prompt, "Use my custom system prompt.")
         self.assertEqual(params.video_clip_duration, 2)
 
+    def test_apply_worldcup_defaults_replaces_only_blank_terms(self):
+        params = VideoParams(video_subject="World Cup history", video_terms="   ")
+
+        worldcup.apply_worldcup_defaults(params)
+
+        self.assertEqual(params.video_terms, worldcup.DEFAULT_SAFE_BROLL_TERMS)
+
     def test_safe_terms_do_not_request_match_footage(self):
         unsafe_words = ["broadcast", "highlight", "official footage", "match clip"]
 
@@ -53,6 +60,9 @@ class TestWorldCupPreset(unittest.TestCase):
 
         for word in unsafe_words:
             self.assertNotIn(word, joined_terms)
+
+    def test_webui_safe_stock_sources_are_pexels_and_pixabay(self):
+        self.assertEqual(worldcup.SAFE_STOCK_SOURCES, ("pexels", "pixabay"))
 
     def test_build_subject_uses_only_supplied_topic_facts(self):
         subject = worldcup.build_subject(

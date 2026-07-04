@@ -94,6 +94,42 @@ class TestTaskService(unittest.TestCase):
         self.assertTrue(params.match_materials_to_script)
         self.assertIn("football stadium crowd", params.video_terms)
 
+    def test_worldcup_manual_script_returns_video_paths_without_llm(self):
+        params = VideoParams(
+            video_subject="A timeless World Cup story",
+            video_script="This is a complete manual English narration.",
+            content_preset="worldcup_shorts",
+            video_source="pexels",
+        )
+
+        with (
+            patch.object(tm.sm.state, "update_task"),
+            patch.object(tm.llm, "generate_script") as generate_script,
+            patch.object(tm.llm, "generate_terms") as generate_terms,
+            patch.object(tm, "save_script_data"),
+            patch.object(
+                tm, "generate_audio", return_value=("audio.mp3", 40, object())
+            ),
+            patch.object(tm, "generate_subtitle", return_value="subtitle.srt"),
+            patch.object(tm, "get_video_materials", return_value=["stock.mp4"]),
+            patch.object(
+                tm,
+                "generate_final_videos",
+                return_value=(["final-1.mp4"], ["combined-1.mp4"]),
+            ),
+            patch.object(
+                tm.upload_post.upload_post_service,
+                "is_configured",
+                return_value=False,
+            ),
+        ):
+            result = tm.start("worldcup-manual-task", params)
+
+        generate_script.assert_not_called()
+        generate_terms.assert_not_called()
+        self.assertEqual(result["videos"], ["final-1.mp4"])
+        self.assertEqual(result["combined_videos"], ["combined-1.mp4"])
+
     def test_generate_audio_uses_custom_file_inside_task_directory(self):
         task_id = "test-custom-audio-safe"
         task_dir = utils.task_dir(task_id)

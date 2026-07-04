@@ -6,6 +6,7 @@ from app.models.schema import VideoAspect, VideoConcatMode
 
 
 CONTENT_PRESET = "worldcup_shorts"
+SAFE_STOCK_SOURCES = ("pexels", "pixabay")
 
 DEFAULT_SAFE_BROLL_TERMS = [
     "football stadium crowd",
@@ -36,6 +37,14 @@ Use punchy narration with one clear hook, a factual middle, and a clean final li
 Keep it faceless and suitable for safe stock B-roll.
 Do not mention or request copyrighted match footage, broadcast clips, or highlight reels.
 """.strip()
+
+
+def has_video_terms(video_terms: Any) -> bool:
+    if isinstance(video_terms, str):
+        return bool(video_terms.strip())
+    if isinstance(video_terms, list):
+        return any(str(term).strip() for term in video_terms)
+    return bool(video_terms)
 
 
 def load_topics(path: str | Path) -> list[dict[str, Any]]:
@@ -77,7 +86,7 @@ def apply_worldcup_defaults(params):
     params.match_materials_to_script = True
     params.subtitle_enabled = True
 
-    if not getattr(params, "video_terms", None):
+    if not has_video_terms(getattr(params, "video_terms", None)):
         params.video_terms = list(DEFAULT_SAFE_BROLL_TERMS)
 
     if not (getattr(params, "custom_system_prompt", "") or "").strip():

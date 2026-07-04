@@ -1,6 +1,11 @@
 {
   "Language": "English",
   "Translation": {
+    "Content Preset": "Content Preset",
+    "Standard Video": "Standard Video",
+    "World Cup Shorts": "World Cup Shorts",
+    "World Cup Shorts Preset Help": "English, faceless 30-50 second videos with portrait output, subtitles, and copyright-conscious stock B-roll. Paste a manual script to generate without an LLM API key.",
+    "World Cup Stock Terms Help": "Use only generic stock-footage descriptions. Do not request match broadcasts, highlight reels, or official footage.",
     "Login Required": "Login Required",
     "Please login to access settings": "Please login to access settings",
     "Username": "Username",

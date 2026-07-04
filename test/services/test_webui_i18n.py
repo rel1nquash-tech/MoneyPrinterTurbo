@@ -71,3 +71,11 @@ class TestWebuiI18n(unittest.TestCase):
 
         self.assertIsNotNone(support_locales)
         self.assertIn("ru-RU", support_locales)
+
+    def test_worldcup_preset_is_wired_into_webui(self):
+        source = WEBUI_MAIN.read_text(encoding="utf-8")
+
+        self.assertIn("worldcup.CONTENT_PRESET", source)
+        self.assertIn("params.content_preset =", source)
+        self.assertIn("worldcup.apply_worldcup_defaults(params)", source)
+        self.assertIn("disabled=is_worldcup_shorts", source)

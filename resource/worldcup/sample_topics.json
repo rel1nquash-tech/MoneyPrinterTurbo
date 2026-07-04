@@ -1,0 +1,62 @@
+[
+  {
+    "id": "historic-upset",
+    "match": "[Tournament year]: [Team A] vs [Team B]",
+    "angle": "How a verified underdog performance changed the tournament story",
+    "facts": [
+      "[Verified pre-match context]",
+      "[Verified turning point described without using match footage]",
+      "[Verified historical significance]"
+    ]
+  },
+  {
+    "id": "final-tactical-theme",
+    "match": "[Tournament year] final: [Team A] vs [Team B]",
+    "angle": "One simple tactical theme that shaped the final",
+    "facts": [
+      "[Verified formation or tactical approach]",
+      "[Verified adjustment]",
+      "[Verified outcome stated with a reliable source]"
+    ]
+  },
+  {
+    "id": "team-journey",
+    "match": "[Team] at the [Tournament year] World Cup",
+    "angle": "A concise journey from qualification to the team's final tournament stage",
+    "facts": [
+      "[Verified qualification detail]",
+      "[Verified group-stage milestone]",
+      "[Verified final placement or elimination stage]"
+    ]
+  },
+  {
+    "id": "record-explainer",
+    "match": "A verified World Cup record held by [Team or player]",
+    "angle": "Why the record matters in tournament history",
+    "facts": [
+      "[Exact record and measurement]",
+      "[Tournament and date when it was set]",
+      "[Reliable source used to verify it]"
+    ]
+  },
+  {
+    "id": "host-city-culture",
+    "match": "[Host city] during the [Tournament year] World Cup",
+    "angle": "How local football culture welcomed visiting supporters",
+    "facts": [
+      "[Verified stadium or fan-zone detail]",
+      "[Verified local tradition]",
+      "[Verified transport or city context]"
+    ]
+  },
+  {
+    "id": "tournament-format-history",
+    "match": "The World Cup format in [Tournament year]",
+    "angle": "How that edition's format affected the route to the final",
+    "facts": [
+      "[Verified number of participating teams]",
+      "[Verified group and knockout structure]",
+      "[Verified comparison with an earlier or later edition]"
+    ]
+  }
+]
