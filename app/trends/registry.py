@@ -5,10 +5,15 @@ from typing import Protocol
 
 @dataclass(frozen=True)
 class TrendTopic:
+    id: str
     title: str
+    hook: str
     description: str
     score: int
+    estimated_duration: int
+    voice: str
     category: str
+    tags: list[str]
 
 
 class TrendProvider(Protocol):

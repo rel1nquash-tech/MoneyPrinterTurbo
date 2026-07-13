@@ -128,6 +128,16 @@ if "video_script" not in st.session_state:
     st.session_state["video_script"] = ""
 if "video_terms" not in st.session_state:
     st.session_state["video_terms"] = ""
+if "trend_prefill_active" not in st.session_state:
+    st.session_state["trend_prefill_active"] = False
+if "trend_topic_id" not in st.session_state:
+    st.session_state["trend_topic_id"] = ""
+if "trend_voice" not in st.session_state:
+    st.session_state["trend_voice"] = ""
+if "trend_duration" not in st.session_state:
+    st.session_state["trend_duration"] = 45
+if "trend_category" not in st.session_state:
+    st.session_state["trend_category"] = ""
 if "video_script_prompt" not in st.session_state:
     st.session_state["video_script_prompt"] = ""
 if "custom_system_prompt" not in st.session_state:
@@ -782,6 +792,18 @@ with left_panel:
             tr("Video Subject"),
             key="video_subject",
         ).strip()
+
+        if st.session_state.get("trend_prefill_active"):
+            st.caption("Daily Trends prefill")
+            st.text_input("Category", key="trend_category")
+            st.text_input("Voice", key="trend_voice")
+            st.number_input(
+                "Duration (seconds)",
+                min_value=1,
+                max_value=600,
+                step=1,
+                key="trend_duration",
+            )
 
         video_languages = [
             (tr("Auto Detect"), ""),

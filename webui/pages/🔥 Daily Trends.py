@@ -8,6 +8,7 @@ if root_dir not in sys.path:
     sys.path.append(root_dir)
 
 from app.trends.webui import (  # noqa: E402
+    apply_video_generator_prefill,
     get_provider_options,
     get_topics_for_providers,
     topics_to_json,
@@ -51,9 +52,9 @@ for index, topic in enumerate(topics):
         st.write(topic.description)
         st.metric("Score", topic.score)
 
-        if st.button("Generate", key=f"generate_topic_{index}_{topic.category}"):
-            st.session_state["video_subject"] = topic.title
-            st.success(f"Video subject set to: {topic.title}")
+        if st.button("Generate Video", key=f"generate_topic_{index}_{topic.category}"):
+            apply_video_generator_prefill(st.session_state, topic)
+            st.switch_page("webui/Main.py")
 
 if st.session_state.get("daily_trends_export_json"):
     st.code(st.session_state["daily_trends_export_json"], language="json")
