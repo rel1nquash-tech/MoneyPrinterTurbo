@@ -9,7 +9,6 @@ if root_dir not in sys.path:
 
 from app.script_studio.generator import (  # noqa: E402
     PLATFORM_LABELS,
-    PLATFORMS,
     generate_package,
 )
 
@@ -67,6 +66,9 @@ if st.button("🚀 İçerik Paketini Oluştur", type="primary", use_container_wi
     if not subject.strip():
         st.error("Önce bir konu gir veya Daily Trends ekranından bir trend seç.")
         st.stop()
+    if not selected_platforms:
+        st.error("En az bir yayın platformu seç.")
+        st.stop()
 
     with st.spinner("Senaryo ve platform içerikleri hazırlanıyor..."):
         try:
@@ -74,7 +76,7 @@ if st.button("🚀 İçerik Paketini Oluştur", type="primary", use_container_wi
                 subject=subject,
                 language=language,
                 duration=duration,
-                platforms=selected_platforms or list(PLATFORMS),
+                platforms=selected_platforms,
                 extra_requirements=extra_requirements,
             )
             st.session_state["script_studio_package"] = package
