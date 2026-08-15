@@ -112,4 +112,4 @@ if package:
         st.session_state["video_terms"] = category
         st.session_state["trend_prefill_active"] = True
         st.session_state["script_studio_source"] = True
-        st.switch_page("webui/Main.py")
+        st.switch_page("Main.py")
