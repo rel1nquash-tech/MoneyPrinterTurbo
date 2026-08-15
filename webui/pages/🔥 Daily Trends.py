@@ -63,7 +63,7 @@ for index, topic in enumerate(topics):
                 apply_video_generator_prefill(st.session_state, topic)
                 st.session_state["script_studio_topic_id"] = topic.id
                 st.session_state["script_studio_category"] = topic.category
-                st.switch_page("webui/pages/✍️ AI Script Studio.py")
+                st.switch_page("pages/✍️ AI Script Studio.py")
 
         with action_col2:
             if st.button(
@@ -72,7 +72,7 @@ for index, topic in enumerate(topics):
                 use_container_width=True,
             ):
                 apply_video_generator_prefill(st.session_state, topic)
-                st.switch_page("webui/Main.py")
+                st.switch_page("Main.py")
 
 if st.session_state.get("daily_trends_export_json"):
     st.code(st.session_state["daily_trends_export_json"], language="json")
