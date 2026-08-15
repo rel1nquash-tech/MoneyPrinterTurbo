@@ -183,6 +183,8 @@ def generate_package(
             paragraph_number=max(1, min(10, round(duration / 45))),
             video_script_prompt=extra_requirements,
         ).strip()
+        if script.startswith("Error:"):
+            raise RuntimeError(script)
     if not title:
         title = subject
     if not hook:
