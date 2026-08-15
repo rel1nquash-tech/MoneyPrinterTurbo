@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 import app.script_studio.generator as generator
 
 from app.script_studio.generator import (
@@ -108,3 +110,16 @@ def test_generate_package_uses_core_copy_when_platform_metadata_is_invalid(monke
     assert package.platforms["tiktok"].title == "AI update"
     assert package.platforms["tiktok"].caption == "A concise factual script."
     assert package.platforms["tiktok"].hashtags == []
+
+
+
+def test_generate_package_raises_when_script_fallback_returns_an_error(monkeypatch):
+    monkeypatch.setattr(generator, "_generate_structured", lambda _prompt: {})
+    monkeypatch.setattr(
+        generator.llm,
+        "generate_script",
+        lambda **_kwargs: "Error: openai: api_key is not set",
+    )
+
+    with pytest.raises(RuntimeError, match="api_key is not set"):
+        generate_package(subject="AI", platforms=[])
