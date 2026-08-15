@@ -59,20 +59,40 @@ def _parse_json_object(text: str) -> dict:
         parsed = json.loads(value)
         return parsed if isinstance(parsed, dict) else {}
     except json.JSONDecodeError:
-        match = re.search(r"\{.*\}", value, flags=re.DOTALL)
-        if not match:
-            return {}
-        try:
-            parsed = json.loads(match.group(0))
-            return parsed if isinstance(parsed, dict) else {}
-        except json.JSONDecodeError:
-            return {}
+        # Provider responses can contain an explanation before the JSON. Decode
+        # each possible object start instead of using a greedy regex, which can
+        # accidentally join multiple objects into invalid JSON.
+        decoder = json.JSONDecoder()
+        for match in re.finditer(r"\{", value):
+            try:
+                parsed, _ = decoder.raw_decode(value[match.start() :])
+            except json.JSONDecodeError:
+                continue
+            if isinstance(parsed, dict):
+                return parsed
+        return {}
 
 
 def _generate_structured(prompt: str) -> dict:
     """Use the existing LLM service and recover a JSON object from its text."""
     response = llm._generate_response(prompt)
     return _parse_json_object(response)
+
+
+def _default_cta(language: str) -> str:
+    """Return a short fallback CTA without switching the requested language."""
+    language_code = _clean(language).lower().replace("_", "-").split("-", 1)[0]
+    return {
+        "ar": "تابع للمزيد.",
+        "de": "Folge für mehr.",
+        "en": "Follow for more.",
+        "es": "Sigue para más.",
+        "fr": "Suivez-nous pour plus.",
+        "it": "Segui per saperne di più.",
+        "pt": "Siga para mais.",
+        "ru": "Подпишитесь, чтобы узнать больше.",
+        "tr": "Daha fazlası için takip et.",
+    }.get(language_code, "Follow for more.")
 
 
 def build_script_studio_prompt(
@@ -135,9 +155,11 @@ def generate_package(
     if not subject:
         raise ValueError("subject is required")
 
-    selected = [p for p in (platforms or PLATFORMS) if p in PLATFORMS]
-    if not selected:
-        selected = list(PLATFORMS)
+    selected = (
+        list(PLATFORMS)
+        if platforms is None
+        else [platform for platform in platforms if platform in PLATFORMS]
+    )
 
     core = _generate_structured(
         build_script_studio_prompt(
@@ -166,7 +188,7 @@ def generate_package(
     if not hook:
         hook = script.split(".", 1)[0].strip() if script else subject
     if not cta:
-        cta = "Daha fazlası için takip et."
+        cta = _default_cta(language)
 
     package = ScriptPackage(title=title, hook=hook, script=script, cta=cta)
 
