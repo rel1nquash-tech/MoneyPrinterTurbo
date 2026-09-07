@@ -26,6 +26,7 @@ from app.models.schema import (
 from app.services import llm, voice
 from app.services import task as tm
 from app.utils import utils
+from app.video_use.workspace import prepare_workspace
 
 st.set_page_config(
     page_title="MoneyPrinterTurbo",
@@ -1791,6 +1792,10 @@ if start_button:
         st.stop()
 
     video_files = result.get("videos", [])
+    st.session_state["completed_video_files"] = video_files
+    st.session_state["completed_video_task_id"] = task_id
+    st.session_state["completed_video_subject"] = params.video_subject
+    st.session_state["completed_video_script"] = params.video_script
     st.success(tr("Video Generation Completed"))
     try:
         if video_files:
@@ -1803,5 +1808,32 @@ if start_button:
     open_task_folder(task_id)
     logger.info(tr("Video Generation Completed"))
     scroll_to_bottom()
+
+
+completed_video_files = st.session_state.get("completed_video_files", [])
+completed_video_task_id = st.session_state.get("completed_video_task_id", "")
+if completed_video_files and completed_video_task_id:
+    st.divider()
+    st.subheader("Optional post-production with video-use")
+    st.caption(
+        "Create a video-use workspace with the generated video and an editing brief. "
+        "This does not change the original video."
+    )
+    if st.button(
+        "✨ Prepare video-use editing workspace",
+        key=f"prepare_video_use_{completed_video_task_id}",
+        use_container_width=True,
+    ):
+        try:
+            video_use_workspace = prepare_workspace(
+                task_dir=utils.task_dir(completed_video_task_id),
+                video_files=completed_video_files,
+                subject=st.session_state.get("completed_video_subject", ""),
+                script=st.session_state.get("completed_video_script", ""),
+            )
+            st.success(f"video-use workspace prepared: {video_use_workspace.path}")
+            st.code(video_use_workspace.command, language="powershell")
+        except (OSError, ValueError) as exc:
+            st.error(f"video-use workspace could not be prepared: {exc}")
 
 config.save_config()
