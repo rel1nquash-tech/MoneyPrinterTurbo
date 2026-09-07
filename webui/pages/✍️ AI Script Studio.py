@@ -11,6 +11,7 @@ from app.script_studio.generator import (  # noqa: E402
     PLATFORM_LABELS,
     generate_package,
 )
+from app.script_studio.manual import build_manual_video_payload  # noqa: E402
 
 
 st.set_page_config(
@@ -61,6 +62,53 @@ extra_requirements = st.text_area(
     placeholder="Örn. Finansal konularda abartılı yatırım tavsiyesi verme.",
     height=80,
 )
+
+st.divider()
+with st.expander("✍️ API olmadan manuel senaryo", expanded=True):
+    st.caption(
+        "Bu alan LLM çağırmaz. Senaryo ve Pexels arama terimlerini girip "
+        "doğrudan Video Generator'a aktarabilirsin."
+    )
+    manual_title = st.text_input(
+        "Manuel başlık",
+        value=subject,
+        key="manual_studio_title",
+    )
+    manual_hook = st.text_area("Manuel hook (opsiyonel)", key="manual_studio_hook")
+    manual_script = st.text_area(
+        "Manuel senaryo",
+        height=220,
+        key="manual_studio_script",
+    )
+    manual_cta = st.text_input("Manuel CTA (opsiyonel)", key="manual_studio_cta")
+    manual_visual_terms = st.text_input(
+        "Pexels arama terimleri",
+        placeholder="artificial intelligence, data center, technology",
+        key="manual_studio_visual_terms",
+    )
+    if st.button(
+        "🎬 Manuel senaryoyu Video Generator'a Aktar",
+        type="primary",
+        use_container_width=True,
+        key="manual_studio_transfer",
+    ):
+        try:
+            manual_payload = build_manual_video_payload(
+                subject=subject,
+                title=manual_title,
+                hook=manual_hook,
+                script=manual_script,
+                cta=manual_cta,
+                visual_terms=manual_visual_terms,
+            )
+            st.session_state.update(manual_payload)
+            st.session_state["trend_prefill_active"] = True
+            st.session_state["script_studio_source"] = "manual"
+            st.switch_page("Main.py")
+        except ValueError as exc:
+            st.error(str(exc))
+
+st.divider()
 
 if st.button("🚀 İçerik Paketini Oluştur", type="primary", use_container_width=True):
     if not subject.strip():
