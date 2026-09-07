@@ -6,8 +6,11 @@ on:
       - feature/trend-generator
     paths:
       - "app/script_studio/**"
+      - "app/video_use/**"
       - "test/script_studio/**"
+      - "test/video_use/**"
       - "webui/pages/✍️ AI Script Studio.py"
+      - "webui/Main.py"
       - ".github/workflows/script-studio-tests.yml"
   pull_request:
     paths:
@@ -29,4 +32,4 @@ jobs:
       - name: Install targeted test dependencies
         run: python -m pip install pytest openai loguru requests toml
       - name: Run Script Studio tests
-        run: python -m pytest test/script_studio/test_generator.py -q
+        run: python -m pytest test/script_studio/test_generator.py test/video_use/test_workspace.py -q
