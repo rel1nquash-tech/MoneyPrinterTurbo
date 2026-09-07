@@ -32,4 +32,4 @@ jobs:
       - name: Install targeted test dependencies
         run: python -m pip install pytest openai loguru requests toml
       - name: Run Script Studio tests
-        run: python -m pytest test/script_studio/test_generator.py test/video_use/test_workspace.py -q
+        run: python -m pytest test/script_studio test/video_use -q
