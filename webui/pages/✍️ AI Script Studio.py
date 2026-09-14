@@ -45,14 +45,7 @@ with col3:
 selected_labels = st.multiselect(
     "Platformlar",
     options=list(PLATFORM_LABELS.values()),
-    default=[
-        PLATFORM_LABELS["tiktok"],
-        PLATFORM_LABELS["instagram_reels"],
-        PLATFORM_LABELS["youtube_shorts"],
-        PLATFORM_LABELS["x"],
-        PLATFORM_LABELS["threads"],
-        PLATFORM_LABELS["linkedin"],
-    ],
+    default=list(PLATFORM_LABELS.values()),
 )
 label_to_platform = {label: platform for platform, label in PLATFORM_LABELS.items()}
 selected_platforms = [label_to_platform[label] for label in selected_labels]
@@ -69,17 +62,9 @@ with st.expander("✍️ API olmadan manuel senaryo", expanded=True):
         "Bu alan LLM çağırmaz. Senaryo ve Pexels arama terimlerini girip "
         "doğrudan Video Generator'a aktarabilirsin."
     )
-    manual_title = st.text_input(
-        "Manuel başlık",
-        value=subject,
-        key="manual_studio_title",
-    )
+    manual_title = st.text_input("Manuel başlık", value=subject, key="manual_studio_title")
     manual_hook = st.text_area("Manuel hook (opsiyonel)", key="manual_studio_hook")
-    manual_script = st.text_area(
-        "Manuel senaryo",
-        height=220,
-        key="manual_studio_script",
-    )
+    manual_script = st.text_area("Manuel senaryo", height=220, key="manual_studio_script")
     manual_cta = st.text_input("Manuel CTA (opsiyonel)", key="manual_studio_cta")
     manual_visual_terms = st.text_input(
         "Pexels arama terimleri",
@@ -118,7 +103,7 @@ if st.button("🚀 İçerik Paketini Oluştur", type="primary", use_container_wi
         st.error("En az bir yayın platformu seç.")
         st.stop()
 
-    with st.spinner("Senaryo ve platform içerikleri hazırlanıyor..."):
+    with st.spinner("Senaryo, görsel akışı ve platform içerikleri hazırlanıyor..."):
         try:
             package = generate_package(
                 subject=subject,
@@ -142,6 +127,14 @@ if package:
     script = st.text_area("Senaryo", value=package.script, height=260, key="studio_script")
     cta = st.text_input("CTA", value=package.cta, key="studio_cta")
 
+    st.subheader("🎞️ Görsel storyboard")
+    if package.visual_terms:
+        st.caption("Terimler senaryonun anlatım sırasına göre üretilir ve Video Generator'a aynı sırayla aktarılır.")
+        for index, term in enumerate(package.visual_terms, start=1):
+            st.write(f"**{index}.** {term}")
+    else:
+        st.info("Görsel terimleri üretilemedi. Video Generator mevcut kategori/konu ile devam edebilir.")
+
     st.subheader("Platform içerikleri")
     for platform, copy in package.platforms.items():
         with st.expander(PLATFORM_LABELS.get(platform, platform), expanded=False):
@@ -157,7 +150,7 @@ if package:
     if st.button("🎬 Video Generator'a Aktar", type="primary", use_container_width=True):
         st.session_state["video_subject"] = title or subject
         st.session_state["video_script"] = f"{hook}\n\n{script}\n\n{cta}".strip()
-        st.session_state["video_terms"] = category
+        st.session_state["video_terms"] = ", ".join(package.visual_terms) or category
         st.session_state["trend_prefill_active"] = True
-        st.session_state["script_studio_source"] = True
+        st.session_state["script_studio_source"] = "ai"
         st.switch_page("Main.py")
