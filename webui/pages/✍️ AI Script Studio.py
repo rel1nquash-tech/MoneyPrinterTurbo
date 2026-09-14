@@ -12,6 +12,7 @@ from app.script_studio.generator import (  # noqa: E402
     generate_package,
 )
 from app.script_studio.manual import build_manual_video_payload  # noqa: E402
+from app.video_pipeline.variants import all_video_variants  # noqa: E402
 
 
 st.set_page_config(
@@ -50,6 +51,15 @@ selected_labels = st.multiselect(
 label_to_platform = {label: platform for platform, label in PLATFORM_LABELS.items()}
 selected_platforms = [label_to_platform[label] for label in selected_labels]
 
+format_options = {variant.key: f"{variant.label} ({variant.key})" for variant in all_video_variants()}
+selected_output_variants = st.multiselect(
+    "Video çıktı formatları",
+    options=list(format_options),
+    default=st.session_state.get("video_output_variants", ["9:16"]),
+    format_func=lambda key: format_options[key],
+    help="Birden fazla format seçersen Video Generator aynı içeriği her seçilen oran için hazırlayabilir.",
+)
+
 extra_requirements = st.text_area(
     "Ek talimat (opsiyonel)",
     placeholder="Örn. Finansal konularda abartılı yatırım tavsiyesi verme.",
@@ -87,6 +97,7 @@ with st.expander("✍️ API olmadan manuel senaryo", expanded=True):
                 visual_terms=manual_visual_terms,
             )
             st.session_state.update(manual_payload)
+            st.session_state["video_output_variants"] = selected_output_variants or ["9:16"]
             st.session_state["trend_prefill_active"] = True
             st.session_state["script_studio_source"] = "manual"
             st.switch_page("Main.py")
@@ -102,6 +113,9 @@ if st.button("🚀 İçerik Paketini Oluştur", type="primary", use_container_wi
     if not selected_platforms:
         st.error("En az bir yayın platformu seç.")
         st.stop()
+    if not selected_output_variants:
+        st.error("En az bir video çıktı formatı seç.")
+        st.stop()
 
     with st.spinner("Senaryo, görsel akışı ve platform içerikleri hazırlanıyor..."):
         try:
@@ -114,6 +128,7 @@ if st.button("🚀 İçerik Paketini Oluştur", type="primary", use_container_wi
             )
             st.session_state["script_studio_package"] = package
             st.session_state["script_studio_category"] = category
+            st.session_state["video_output_variants"] = selected_output_variants
         except Exception as exc:
             st.error(f"İçerik paketi oluşturulamadı: {exc}")
 
@@ -151,6 +166,7 @@ if package:
         st.session_state["video_subject"] = title or subject
         st.session_state["video_script"] = f"{hook}\n\n{script}\n\n{cta}".strip()
         st.session_state["video_terms"] = ", ".join(package.visual_terms) or category
+        st.session_state["video_output_variants"] = selected_output_variants or ["9:16"]
         st.session_state["trend_prefill_active"] = True
         st.session_state["script_studio_source"] = "ai"
         st.switch_page("Main.py")
