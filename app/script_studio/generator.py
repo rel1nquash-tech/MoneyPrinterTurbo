@@ -43,6 +43,7 @@ class ScriptPackage:
     hook: str
     script: str
     cta: str
+    visual_terms: list[str] = field(default_factory=list)
     platforms: dict[str, PlatformCopy] = field(default_factory=dict)
 
 
@@ -59,9 +60,6 @@ def _parse_json_object(text: str) -> dict:
         parsed = json.loads(value)
         return parsed if isinstance(parsed, dict) else {}
     except json.JSONDecodeError:
-        # Provider responses can contain an explanation before the JSON. Decode
-        # each possible object start instead of using a greedy regex, which can
-        # accidentally join multiple objects into invalid JSON.
         decoder = json.JSONDecoder()
         for match in re.finditer(r"\{", value):
             try:
@@ -143,6 +141,42 @@ Tailor the style to {label}. Do not invent facts. No markdown in title or captio
 """
 
 
+def _normalize_visual_terms(value: object) -> list[str]:
+    if isinstance(value, str):
+        values = re.split(r"[,，\n]", value)
+    elif isinstance(value, list):
+        values = value
+    else:
+        values = []
+    result = []
+    seen = set()
+    for item in values:
+        term = _clean(item)
+        if not term:
+            continue
+        key = term.casefold()
+        if key not in seen:
+            seen.add(key)
+            result.append(term)
+    return result[:8]
+
+
+def _generate_visual_terms(subject: str, script: str) -> list[str]:
+    """Generate ordered visual search terms using the existing material-term logic."""
+    try:
+        terms = llm.generate_terms(
+            video_subject=subject,
+            video_script=script,
+            amount=8,
+            match_script_order=True,
+        )
+    except Exception:
+        return []
+    if isinstance(terms, str) and terms.startswith("Error:"):
+        return []
+    return _normalize_visual_terms(terms)
+
+
 def generate_package(
     subject: str,
     language: str = "tr-TR",
@@ -150,7 +184,7 @@ def generate_package(
     platforms: list[str] | None = None,
     extra_requirements: str = "",
 ) -> ScriptPackage:
-    """Generate the core script and platform-specific publishing metadata."""
+    """Generate the core script, ordered visual terms and platform metadata."""
     subject = _clean(subject)
     if not subject:
         raise ValueError("subject is required")
@@ -176,7 +210,6 @@ def generate_package(
     cta = _clean(core.get("cta"))
 
     if not script:
-        # Keep a deterministic fallback through the existing script generator.
         script = llm.generate_script(
             video_subject=subject,
             language=language,
@@ -192,7 +225,14 @@ def generate_package(
     if not cta:
         cta = _default_cta(language)
 
-    package = ScriptPackage(title=title, hook=hook, script=script, cta=cta)
+    visual_terms = _generate_visual_terms(subject, f"{hook}\n\n{script}\n\n{cta}")
+    package = ScriptPackage(
+        title=title,
+        hook=hook,
+        script=script,
+        cta=cta,
+        visual_terms=visual_terms,
+    )
 
     for platform in selected:
         metadata = _generate_structured(
