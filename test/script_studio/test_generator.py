@@ -6,8 +6,9 @@ import app.script_studio.generator as generator
 
 from app.script_studio.generator import (
     PLATFORMS,
-    _parse_json_object,
     _default_cta,
+    _normalize_visual_terms,
+    _parse_json_object,
     build_platform_prompt,
     build_script_studio_prompt,
     generate_package,
@@ -43,10 +44,7 @@ def test_platform_registry_is_stable():
     assert "tiktok" in PLATFORMS
     assert "linkedin" in PLATFORMS
     assert len(set(PLATFORMS)) == len(PLATFORMS)
-
-    # Ensure the expected JSON representation remains serializable for future API use.
     json.dumps(list(PLATFORMS))
-
 
 
 def test_parse_json_object_recovers_first_of_multiple_embedded_objects():
@@ -61,11 +59,23 @@ def test_default_cta_matches_requested_language():
     assert _default_cta("en-US") == "Follow for more."
 
 
+def test_normalize_visual_terms_deduplicates_and_limits():
+    value = _normalize_visual_terms(
+        ["Data center", "data center", "AI chip", "", "cloud"]
+    )
+    assert value == ["Data center", "AI chip", "cloud"]
+
+
 def test_generate_package_falls_back_without_creating_unrequested_platforms(monkeypatch):
     monkeypatch.setattr(
         generator,
         "_generate_structured",
         lambda _prompt: {"title": "AI update", "hook": "", "script": "", "cta": ""},
+    )
+    monkeypatch.setattr(
+        generator,
+        "_generate_visual_terms",
+        lambda _subject, _script: ["AI chip", "data center"],
     )
     monkeypatch.setattr(
         generator.llm,
@@ -84,6 +94,7 @@ def test_generate_package_falls_back_without_creating_unrequested_platforms(monk
     assert package.hook == "Fallback narration"
     assert package.script == "Fallback narration. It is ready to record."
     assert package.cta == "Follow for more."
+    assert package.visual_terms == ["AI chip", "data center"]
     assert package.platforms == {}
 
 
@@ -100,6 +111,7 @@ def test_generate_package_uses_core_copy_when_platform_metadata_is_invalid(monke
         ]
     )
     monkeypatch.setattr(generator, "_generate_structured", lambda _prompt: next(responses))
+    monkeypatch.setattr(generator, "_generate_visual_terms", lambda _subject, _script: [])
 
     package = generate_package(
         subject="AI",
@@ -112,9 +124,9 @@ def test_generate_package_uses_core_copy_when_platform_metadata_is_invalid(monke
     assert package.platforms["tiktok"].hashtags == []
 
 
-
 def test_generate_package_raises_when_script_fallback_returns_an_error(monkeypatch):
     monkeypatch.setattr(generator, "_generate_structured", lambda _prompt: {})
+    monkeypatch.setattr(generator, "_generate_visual_terms", lambda _subject, _script: [])
     monkeypatch.setattr(
         generator.llm,
         "generate_script",
