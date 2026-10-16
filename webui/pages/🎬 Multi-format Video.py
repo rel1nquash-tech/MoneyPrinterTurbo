@@ -1,6 +1,3 @@
-import os
-from uuid import uuid4
-
 import streamlit as st
 from loguru import logger
 
@@ -27,7 +24,7 @@ terms = st.text_input("Video Keywords", key="multi_format_terms")
 
 col1, col2, col3 = st.columns(3)
 with col1:
-    source_options = ["pexels", "pixabay", "coverr", "local"]
+    source_options = ["pexels", "pixabay", "coverr"]
     source = st.selectbox("Video Source", source_options, key="multi_format_source")
 with col2:
     clip_duration = st.selectbox("Clip Duration", [2, 3, 4, 5, 6, 7, 8, 9, 10], index=1)
@@ -75,7 +72,6 @@ if st.button("🚀 Generate Selected Formats", type="primary", use_container_wid
     params.video_count = video_count
 
     progress = st.empty()
-    results = []
 
     def start_task(task_id: str, variant_params: VideoParams):
         progress.info(f"Generating {variant_params.video_aspect.value} …")
