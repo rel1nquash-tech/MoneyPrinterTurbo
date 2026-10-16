@@ -37,3 +37,32 @@ def test_render_variants_skips_failed_tasks_and_keeps_successes():
     assert len(calls) == 3
     assert [result.variant.key for result in results] == ["9:16", "16:9"]
     assert [video for result in results for video in result.videos] == ["ok.mp4", "ok.mp4"]
+
+
+def test_render_variants_continues_after_task_raises():
+    params = VideoParams(video_subject="test")
+    calls = []
+
+    def fake_start(task_id, variant_params):
+        calls.append(variant_params.video_aspect)
+        if variant_params.video_aspect == VideoAspect.square:
+            raise RuntimeError("render failed")
+        return {"videos": [f"{variant_params.video_aspect.value}.mp4"]}
+
+    results = render_variants(params, fake_start, ["9:16", "1:1", "16:9"])
+
+    assert len(calls) == 3
+    assert [result.variant.key for result in results] == ["9:16", "16:9"]
+
+
+def test_render_variants_skips_empty_video_lists():
+    params = VideoParams(video_subject="test")
+
+    def fake_start(task_id, variant_params):
+        if variant_params.video_aspect == VideoAspect.square:
+            return {"videos": []}
+        return {"videos": [f"{variant_params.video_aspect.value}.mp4"]}
+
+    results = render_variants(params, fake_start, ["9:16", "1:1", "16:9"])
+
+    assert [result.variant.key for result in results] == ["9:16", "16:9"]
