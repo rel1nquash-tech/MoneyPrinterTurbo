@@ -39,6 +39,7 @@ Do **not** continue this work directly on `main`.
 - Opt-in multi-format selection integrated into `webui/Main.py` (commit `0643f93`, followed by explicit task callback fix `4632d2a`).
 - Existing single-format generation path remains the default when the checkbox is off or only one format is selected.
 - Main WebUI syntax compilation added to `.github/workflows/script-studio-tests.yml`.
+- Multi-format runner now catches per-format task exceptions, logs failures, continues remaining formats, and skips empty video lists; focused regression tests were added.
 
 ## Important safety constraints
 
@@ -64,12 +65,11 @@ Do **not** continue this work directly on `main`.
 
 ## Next task
 
-Validate and harden the controlled Main.py integration.
+Validate the hardened multi-format orchestration and continue controlled integration testing.
 
 - Check GitHub Actions for the latest CI result, including `python -m py_compile webui/Main.py` and targeted pytest suites.
-- Inspect the Main.py diff for regressions, especially local-material and custom-audio behavior in multi-format mode.
-- If CI passes, manually test in this order: one selected format, then two formats, then all three formats.
-- Consider adding focused tests for UI orchestration without importing Streamlit's full page.
+- Manual UI validation remains necessary in this order: one selected format, then two formats, then all three formats.
+- Consider focused tests for UI orchestration without importing Streamlit's full page.
 - Do not touch `task.py`.
 
 ## Verification before continuing
