@@ -36,6 +36,9 @@ Do **not** continue this work directly on `main`.
   - manifest and format-aware workspace tests in `test/video_use/test_workspace.py`
 - Multi-format WebUI entry point: added at
   `webui/pages/🎬 Multi-format Video.py`
+- Opt-in multi-format selection integrated into `webui/Main.py` (commit `0643f93`, followed by explicit task callback fix `4632d2a`).
+- Existing single-format generation path remains the default when the checkbox is off or only one format is selected.
+- Main WebUI syntax compilation added to `.github/workflows/script-studio-tests.yml`.
 
 ## Important safety constraints
 
@@ -61,24 +64,21 @@ Do **not** continue this work directly on `main`.
 
 ## Next task
 
-Controlled Main.py integration.
+Validate and harden the controlled Main.py integration.
 
-Target behavior:
-
-- Keep the current single-format path unchanged when one format is selected.
-- Add an opt-in multi-format selection to the existing Video Generator UI.
-- When multiple formats are selected, call `render_variants()` rather than duplicating the task-generation implementation.
-- Store the successful multi-format results in session state without breaking the existing completed-video fields.
-- Use `prepare_render_workspace()` for the optional video-use post-production action when multi-format results exist.
+- Check GitHub Actions for the latest CI result, including `python -m py_compile webui/Main.py` and targeted pytest suites.
+- Inspect the Main.py diff for regressions, especially local-material and custom-audio behavior in multi-format mode.
+- If CI passes, manually test in this order: one selected format, then two formats, then all three formats.
+- Consider adding focused tests for UI orchestration without importing Streamlit's full page.
 - Do not touch `task.py`.
-- Add focused tests before considering the integration complete.
 
 ## Verification before continuing
 
 Run at minimum:
 
 ```powershell
-python -m pytest test/video_pipeline test/video_use test/script_studio test/video_use -q
+python -m py_compile webui/Main.py
+python -m pytest test/script_studio test/video_pipeline test/video_use -q
 ```
 
 Then verify the Streamlit page manually with one format first, followed by all three formats. Never start with three formats when debugging a new integration.
