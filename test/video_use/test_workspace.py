@@ -86,6 +86,22 @@ def test_prepare_render_workspace_rejects_results_without_videos(tmp_path: Path)
         prepare_render_workspace(tmp_path, [result])
 
 
+def test_prepare_render_workspace_validates_all_sources_before_copying(tmp_path: Path):
+    source = tmp_path / "vertical.mp4"
+    source.write_bytes(b"video")
+    variants = all_video_variants()
+    results = [
+        VideoRenderResult(variants[0], "task-v", [str(source)]),
+        VideoRenderResult(variants[1], "task-s", [str(tmp_path / "missing.mp4")]),
+    ]
+
+    with pytest.raises(FileNotFoundError, match="Generated video was not found"):
+        prepare_render_workspace(tmp_path / "session", results)
+
+    workspace = tmp_path / "session" / "video-use"
+    assert list(workspace.iterdir()) == []
+
+
 def test_prepare_render_workspace_rejects_duplicate_destination(tmp_path: Path):
     source_a = tmp_path / "a.mp4"
     source_b = tmp_path / "b.mp4"

@@ -107,9 +107,10 @@ def prepare_render_workspace(
     workspace = Path(base_dir) / "video-use"
     workspace.mkdir(parents=True, exist_ok=True)
 
-    copied_sources: list[Path] = []
-    manifest: list[dict[str, object]] = []
-
+    # Validate every source and destination before writing anything. Otherwise,
+    # a missing later source leaves partial copies behind and makes a retry fail
+    # on the destinations that were already created.
+    source_entries: list[tuple[VideoRenderResult, Path, Path]] = []
     for result in render_results:
         for index, video_file in enumerate(result.videos, start=1):
             source = _source_path(video_file)
@@ -117,16 +118,21 @@ def prepare_render_workspace(
             destination = workspace / f"{result.variant.suffix}-{index:02d}{extension}"
             if destination.exists():
                 raise FileExistsError(f"Render workspace source already exists: {destination}")
-            shutil.copy2(source, destination)
-            copied_sources.append(destination)
-            manifest.append(
-                {
-                    "source": destination.name,
-                    "variant": result.variant.key,
-                    "task_id": result.task_id,
-                    "original_path": str(source),
-                }
-            )
+            source_entries.append((result, source, destination))
+
+    copied_sources: list[Path] = []
+    manifest: list[dict[str, object]] = []
+    for result, source, destination in source_entries:
+        shutil.copy2(source, destination)
+        copied_sources.append(destination)
+        manifest.append(
+            {
+                "source": destination.name,
+                "variant": result.variant.key,
+                "task_id": result.task_id,
+                "original_path": str(source),
+            }
+        )
 
     if not copied_sources:
         raise ValueError("Render results contain no video files")
