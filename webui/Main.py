@@ -1818,7 +1818,13 @@ if start_button:
     render_results = []
     if enable_multi_format and len(selected_formats) > 1:
         with st.spinner("Generating selected aspect-ratio formats…"):
-            render_results = render_variants(params, tm.start, selected_formats)
+            render_results = render_variants(
+                params,
+                lambda render_task_id, variant_params: tm.start(
+                    task_id=render_task_id, params=variant_params
+                ),
+                selected_formats,
+            )
         if not render_results:
             st.error(tr("Video Generation Failed"))
             logger.error(tr("Video Generation Failed"))
