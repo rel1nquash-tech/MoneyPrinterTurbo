@@ -36,5 +36,7 @@ jobs:
           python-version: "3.11"
       - name: Install targeted test dependencies
         run: python -m pip install pytest openai loguru requests toml
+      - name: Compile main WebUI entry point
+        run: python -m py_compile webui/Main.py
       - name: Run Script Studio and video pipeline tests
         run: python -m pytest test/script_studio test/video_pipeline test/video_use -q
