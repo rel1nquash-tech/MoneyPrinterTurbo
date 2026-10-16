@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from typing import Callable, Optional
 from uuid import uuid4
 
+from loguru import logger
+
 from app.models.schema import VideoParams
 
 from .planner import build_render_variants
@@ -31,20 +33,46 @@ def render_variants(
 ) -> list[VideoRenderResult]:
     """Run one existing video task per selected format and aggregate videos.
 
-    ``start_task`` is injected so this orchestration layer can be unit-tested
-    without invoking the real video generation service.
+    A failed format is logged and skipped so it cannot prevent later formats
+    from rendering. Empty video lists are not treated as successful results.
+    The injected start_task makes this layer testable without invoking the real
+    video generation service.
     """
     results: list[VideoRenderResult] = []
     for variant, variant_params in build_render_variants(params, values):
         task_id = str(uuid4())
-        result = start_task(task_id, variant_params)
-        if not result or "videos" not in result:
+        try:
+            result = start_task(task_id, variant_params)
+        except Exception:
+            logger.exception(
+                "Multi-format rendering failed for aspect ratio {} (task {})",
+                variant.key,
+                task_id,
+            )
             continue
+
+        if not result or "videos" not in result:
+            logger.warning(
+                "Multi-format task {} ({}) returned no result",
+                task_id,
+                variant.key,
+            )
+            continue
+
+        videos = list(result.get("videos") or [])
+        if not videos:
+            logger.warning(
+                "Multi-format task {} ({}) returned an empty video list",
+                task_id,
+                variant.key,
+            )
+            continue
+
         results.append(
             VideoRenderResult(
                 variant=variant,
                 task_id=task_id,
-                videos=list(result.get("videos") or []),
+                videos=videos,
             )
         )
     return results
