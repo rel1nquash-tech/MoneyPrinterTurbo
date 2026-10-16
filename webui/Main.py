@@ -26,7 +26,9 @@ from app.models.schema import (
 from app.services import llm, voice
 from app.services import task as tm
 from app.utils import utils
-from app.video_use.workspace import prepare_workspace
+from app.video_pipeline.runner import render_variants
+from app.video_pipeline.variants import all_video_variants
+from app.video_use.workspace import prepare_render_workspace, prepare_workspace
 
 st.set_page_config(
     page_title="MoneyPrinterTurbo",
@@ -1002,6 +1004,27 @@ with middle_panel:
         )
         params.video_aspect = VideoAspect(video_aspect_ratios[selected_index][1])
 
+        enable_multi_format = st.checkbox(
+            "Generate multiple aspect-ratio formats",
+            value=False,
+            key="enable_multi_format_generation",
+            help="When enabled, select one or more formats. Multiple selections run separate existing generation tasks.",
+        )
+        selected_output_formats = []
+        if enable_multi_format:
+            selected_output_formats = st.multiselect(
+                "Output formats",
+                options=[variant.key for variant in all_video_variants()],
+                default=[params.video_aspect.value],
+                format_func=lambda value: next(
+                    variant.label for variant in all_video_variants()
+                    if variant.key == value
+                ) + f" ({value})",
+                key="multi_format_output_formats",
+            )
+            if selected_output_formats:
+                params.video_aspect = VideoAspect(selected_output_formats[0])
+
         params.video_clip_duration = st.selectbox(
             tr("Clip Duration"), options=[2, 3, 4, 5, 6, 7, 8, 9, 10], index=1
         )
@@ -1784,14 +1807,54 @@ if start_button:
     logger.info(utils.to_json(params))
     scroll_to_bottom()
 
-    result = tm.start(task_id=task_id, params=params)
-    if not result or "videos" not in result:
-        st.error(tr("Video Generation Failed"))
-        logger.error(tr("Video Generation Failed"))
+    selected_formats = (
+        selected_output_formats if enable_multi_format else [params.video_aspect.value]
+    )
+    if enable_multi_format and not selected_formats:
+        st.error("Select at least one output format.")
         scroll_to_bottom()
         st.stop()
 
-    video_files = result.get("videos", [])
+    render_results = []
+    if enable_multi_format and len(selected_formats) > 1:
+        with st.spinner("Generating selected aspect-ratio formats…"):
+            render_results = render_variants(params, tm.start, selected_formats)
+        if not render_results:
+            st.error(tr("Video Generation Failed"))
+            logger.error(tr("Video Generation Failed"))
+            scroll_to_bottom()
+            st.stop()
+
+        video_files = [
+            video_file
+            for render_result in render_results
+            for video_file in render_result.videos
+        ]
+        task_id = render_results[0].task_id
+        st.session_state["completed_video_render_results"] = render_results
+        st.session_state["completed_video_task_ids"] = [
+            item.task_id for item in render_results
+        ]
+        for render_result in render_results:
+            logger.info(
+                "Multi-format task {} ({}) produced {} video(s)",
+                render_result.task_id,
+                render_result.variant.key,
+                len(render_result.videos),
+            )
+    else:
+        if enable_multi_format and selected_formats:
+            params.video_aspect = VideoAspect(selected_formats[0])
+        result = tm.start(task_id=task_id, params=params)
+        if not result or "videos" not in result:
+            st.error(tr("Video Generation Failed"))
+            logger.error(tr("Video Generation Failed"))
+            scroll_to_bottom()
+            st.stop()
+        video_files = result.get("videos", [])
+        st.session_state.pop("completed_video_render_results", None)
+        st.session_state.pop("completed_video_task_ids", None)
+
     st.session_state["completed_video_files"] = video_files
     st.session_state["completed_video_task_id"] = task_id
     st.session_state["completed_video_subject"] = params.video_subject
@@ -1812,6 +1875,7 @@ if start_button:
 
 completed_video_files = st.session_state.get("completed_video_files", [])
 completed_video_task_id = st.session_state.get("completed_video_task_id", "")
+completed_render_results = st.session_state.get("completed_video_render_results", [])
 if completed_video_files and completed_video_task_id:
     st.divider()
     st.subheader("Optional post-production with video-use")
@@ -1825,12 +1889,20 @@ if completed_video_files and completed_video_task_id:
         use_container_width=True,
     ):
         try:
-            video_use_workspace = prepare_workspace(
-                task_dir=utils.task_dir(completed_video_task_id),
-                video_files=completed_video_files,
-                subject=st.session_state.get("completed_video_subject", ""),
-                script=st.session_state.get("completed_video_script", ""),
-            )
+            if completed_render_results:
+                video_use_workspace = prepare_render_workspace(
+                    base_dir=utils.task_dir(completed_video_task_id),
+                    render_results=completed_render_results,
+                    subject=st.session_state.get("completed_video_subject", ""),
+                    script=st.session_state.get("completed_video_script", ""),
+                )
+            else:
+                video_use_workspace = prepare_workspace(
+                    task_dir=utils.task_dir(completed_video_task_id),
+                    video_files=completed_video_files,
+                    subject=st.session_state.get("completed_video_subject", ""),
+                    script=st.session_state.get("completed_video_script", ""),
+                )
             st.success(f"video-use workspace prepared: {video_use_workspace.path}")
             st.code(video_use_workspace.command, language="powershell")
         except (OSError, ValueError) as exc:
