@@ -66,3 +66,37 @@ def test_render_variants_skips_empty_video_lists():
     results = render_variants(params, fake_start, ["9:16", "1:1", "16:9"])
 
     assert [result.variant.key for result in results] == ["9:16", "16:9"]
+
+
+import pytest
+
+
+@pytest.mark.parametrize("bad", [None, {}, [], "bad", {"videos": []}, {"videos": "a.mp4"}, {"videos": [None]}, {"videos": [""]}, {"videos": 1}])
+def test_invalid_outputs_report_failure_and_continue(bad):
+    failures = []
+    calls = []
+    def start(task_id, params):
+        calls.append(task_id)
+        return bad if len(calls) == 1 else {"videos": ["ok.mp4"]}
+    results = render_variants(VideoParams(video_subject="test"), start, ["9:16", "1:1"], failures=failures)
+    assert len(results) == len(failures) == 1
+    assert failures[0].task_id == calls[0]
+    assert failures[0].variant.key == "9:16"
+    assert failures[0].error
+    assert results[0].task_id == calls[1]
+
+
+def test_all_exceptions_report_each_format():
+    failures = []
+    def start(task_id, params):
+        raise RuntimeError("encoder unavailable")
+    assert render_variants(VideoParams(video_subject="test"), start, ["9:16", "1:1", "16:9"], failures=failures) == []
+    assert [f.variant.key for f in failures] == ["9:16", "1:1", "16:9"]
+    assert all(f.error == "encoder unavailable" for f in failures)
+    assert len({f.task_id for f in failures}) == 3
+
+
+def test_explicit_empty_selection_starts_no_tasks():
+    def start(*args):
+        pytest.fail("No task should start")
+    assert render_variants(VideoParams(video_subject="test"), start, []) == []

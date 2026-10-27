@@ -19,13 +19,13 @@ def build_render_variants(
     """
     selected = values
     if selected is None:
-        selected = [params.video_aspect.value if params.video_aspect else "9:16"]
+        selected = [VideoAspect(params.video_aspect or "9:16").value]
 
     variants = normalize_video_variants(selected)
     return [
         (
             variant,
-            params.copy(update={"video_aspect": VideoAspect(variant.key)}),
+            params.model_copy(deep=True, update={"video_aspect": VideoAspect(variant.key)}),
         )
         for variant in variants
     ]

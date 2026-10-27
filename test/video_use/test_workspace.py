@@ -61,6 +61,7 @@ def test_prepare_render_workspace_keeps_format_and_task_identity(tmp_path: Path)
     assert workspace.sources[0].read_bytes() == b"vertical"
     assert workspace.sources[1].read_bytes() == b"square"
     assert workspace.sources[2].read_bytes() == b"landscape"
+    assert all(path.read_bytes() == suffix.encode("utf-8") for suffix, path in sources.items())
 
     manifest = json.loads(
         (workspace.path / "RENDER_MANIFEST.json").read_text(encoding="utf-8")
@@ -115,3 +116,7 @@ def test_prepare_render_workspace_rejects_duplicate_destination(tmp_path: Path):
 
     with pytest.raises(FileExistsError, match="already exists"):
         prepare_render_workspace(tmp_path, results)
+
+    assert list((tmp_path / "video-use").iterdir()) == []
+    assert source_a.read_bytes() == b"a"
+    assert source_b.read_bytes() == b"b"

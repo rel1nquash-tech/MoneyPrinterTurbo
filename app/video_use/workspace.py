@@ -111,13 +111,15 @@ def prepare_render_workspace(
     # a missing later source leaves partial copies behind and makes a retry fail
     # on the destinations that were already created.
     source_entries: list[tuple[VideoRenderResult, Path, Path]] = []
+    destinations: set[Path] = set()
     for result in render_results:
         for index, video_file in enumerate(result.videos, start=1):
             source = _source_path(video_file)
             extension = source.suffix.lower() or ".mp4"
             destination = workspace / f"{result.variant.suffix}-{index:02d}{extension}"
-            if destination.exists():
+            if destination.exists() or destination in destinations:
                 raise FileExistsError(f"Render workspace source already exists: {destination}")
+            destinations.add(destination)
             source_entries.append((result, source, destination))
 
     copied_sources: list[Path] = []

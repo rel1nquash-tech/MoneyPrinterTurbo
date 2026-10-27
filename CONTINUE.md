@@ -69,10 +69,10 @@ Do **not** continue this work directly on `main`.
 Continue validating the hardened multi-format orchestration and controlled integration testing.
 
 - Check GitHub Actions for the latest CI result, including `python -m py_compile webui/Main.py` and targeted pytest suites.
-- The local environment currently lacks `pytest` in both system Python and `.venv`; install/enable test dependencies before claiming test success.
-- The current session could not access GitHub Actions or authenticate Git fetches, so remote CI status must be checked after the branch is pushed.
+- System Python test dependencies are now installed; targeted tests run locally.
+- Git fetch and GitHub Actions API access verified. Previous runner CI runs succeeded; new CI will be checked after push.
 - Manual UI validation remains necessary in this order: one selected format, then two formats, then all three formats.
-- Consider focused tests for UI orchestration without importing Streamlit's full page.
+- Generation-block tests execute Main.py AST with fake UI/services, without importing Streamlit.
 - Do not touch `task.py`.
 
 ## Verification before continuing
@@ -96,3 +96,14 @@ The latest known commits on this branch include:
 - `2fe933c` — render planner
 
 The exact current HEAD should always be read from Git rather than assumed from this document.
+
+## Hardening checkpoint (2026-10-27)
+
+Initial clean local HEAD: 79a8666; fetched remote HEAD: 4f965ca. All three handoff commits remain ancestors. GitHub runs 38907738110 and 38907723240 succeeded.
+
+- Runner retains its successful-results list contract and optionally collects typed failures with format, task ID, and reason. Invalid video payloads no longer break later formats or count as successes.
+- Planner accepts the default string aspect and deep-copies nested materials. Existing video preprocessing mutates MaterialInfo.url, making isolation necessary.
+- Workspace rejects duplicate destinations before copying; original source bytes are preserved.
+- Custom audio resolution accepts the existing absolute server file path; no task.py changes needed.
+- Local targeted suite after hardening: 57 passed (11 existing Pydantic deprecation warnings). Both WebUI pages compile. Additional UI changes are recorded in the next checkpoint.
+- No real FFmpeg/LLM/video generation was performed.
