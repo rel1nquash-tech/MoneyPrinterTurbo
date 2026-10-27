@@ -30,7 +30,7 @@ def run_generation(formats, enabled=True, fail=False):
     calls = []
     def start(task_id, params):
         calls.append((task_id, params.video_aspect))
-        if fail or params.video_aspect == VideoAspect.square:
+        if fail or (enabled and len(formats) > 1 and params.video_aspect == VideoAspect.square):
             return None
         return {"videos": [f"{task_id}.mp4"]}
     env = dict(start_button=True, st=ui, config=SimpleNamespace(save_config=lambda: None, app={"pexels_api_keys": "fake"}, ui={"hide_log": True}), uuid4=uuid4, params=VideoParams(video_subject="test", video_aspect=VideoAspect.portrait), enable_multi_format=enabled, selected_output_formats=formats, uploaded_audio_file=None, uploaded_files=[], logger=Mock(), utils=SimpleNamespace(to_json=lambda p: ""), tr=lambda x:x, scroll_to_bottom=lambda:None, open_task_folder=lambda x:None, tm=SimpleNamespace(start=start), render_variants=render_variants, VideoAspect=VideoAspect)
@@ -41,19 +41,22 @@ def run_generation(formats, enabled=True, fail=False):
     return state, calls, ui
 
 
-@pytest.mark.parametrize("formats,enabled,expected", [(["9:16"], True, ["9:16"]), (["1:1"], True, ["1:1"]), (["16:9"], True, ["16:9"]), (["1:1", "16:9"], False, ["9:16"]), (["9:16", "1:1", "16:9"], True, ["9:16", "1:1", "16:9"])])
+@pytest.mark.parametrize("formats,enabled,expected", [(["9:16"], True, ["9:16"]), (["1:1"], True, ["1:1"]), (["16:9"], True, ["16:9"]), (["1:1", "16:9"], False, ["9:16"]), (["9:16", "1:1", "16:9"], True, ["9:16", "1:1", "16:9"]), (["9:16", "1:1"], True, ["9:16", "1:1"])])
 def test_actual_generation_routes_and_preserves_identity(formats, enabled, expected):
     state, calls, ui = run_generation(formats, enabled)
     assert [aspect.value for _, aspect in calls] == expected
     assert state["trend_prefill"] == "keep"
     assert "old.mp4" not in state.get("completed_video_files", [])
     if len(expected) > 1:
-        assert state["completed_video_task_ids"] == [calls[0][0], calls[2][0]]
-        assert state["completed_video_files"] == [f"{calls[0][0]}.mp4", f"{calls[2][0]}.mp4"]
+        successful_ids = [task_id for task_id, aspect in calls if aspect != VideoAspect.square]
+        assert state["completed_video_task_ids"] == successful_ids
+        assert state["completed_video_files"] == [f"{task_id}.mp4" for task_id in successful_ids]
         assert state["completed_video_failures"][0].variant.key == "1:1"
         ui.warning.assert_called_once()
     else:
         assert "completed_video_render_results" not in state
+        assert state["completed_video_task_id"] == calls[0][0]
+        assert state["completed_video_files"] == [f"{calls[0][0]}.mp4"]
 
 
 @pytest.mark.parametrize("formats,fail", [([], False), (["9:16"], True), (["9:16", "1:1"], True)])

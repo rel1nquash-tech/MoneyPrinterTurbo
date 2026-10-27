@@ -116,5 +116,12 @@ Initial clean local HEAD: 79a8666; fetched remote HEAD: 4f965ca. All three hando
 - Dedicated-page workspaces are scoped to the first successful task, avoiding collisions across render sessions.
 - Added executable Main generation-block regression tests with fake UI/task services. These are not browser or real-render tests.
 - CI includes both pages' compilation and triggers for the previously omitted workspace/Main/dedicated-page paths.
-- Verification: 57 targeted tests passed; both pages compiled. Remote CI pending push.
+- Verification: 57 targeted tests passed; both pages compiled. CI for f53561c succeeded: https://github.com/rel1nquash-tech/MoneyPrinterTurbo/actions/runs/40581828163.
 - Next: verify pushed CI, then manually validate one, two, and three formats with controlled source/audio inputs.
+
+## Final verification follow-up
+
+- f53561c: WebUI failure reporting, stale-state reset, scoped dedicated workspace, and CI coverage; pushed successfully.
+- Expanded UI route tests to assert successful single square/landscape/portrait results and two-format partial success explicitly.
+- Final local targeted suite: 58 passed, 11 existing Pydantic warnings. No real video generation or browser interaction performed.
+- The follow-up test commit requires its own CI check; the prior implementation commit's CI is confirmed successful.
