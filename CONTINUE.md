@@ -126,3 +126,13 @@ Initial clean local HEAD: 79a8666; fetched remote HEAD: 4f965ca. All three hando
 - Final local targeted suite: 58 passed, 11 existing Pydantic warnings. No real video generation or browser interaction performed.
 - 940f8d6: final test follow-up pushed; GitHub Actions completed successfully: https://github.com/rel1nquash-tech/MoneyPrinterTurbo/actions/runs/40581918749. All 58 targeted tests and both page compilations passed in CI.
 - Remaining work is controlled manual video generation with one, two, then three formats; no real-render success is claimed.
+
+## Real rendering validation (2026-10-27)
+
+- Found a real custom-audio failure: get_audio_duration only accepted lowercase .mp3, despite the uploader accepting WAV/M4A/AAC/FLAC/OGG. Voice duration dispatch now probes all string paths through the existing MoviePy helper; task.py remains untouched.
+- Added an opt-in offline real-task smoke script: `.venv/Scripts/python scripts/validate_multi_format.py`. It creates 1-second synthetic video/WAV fixtures, disables auto-upload in its process, and exercises one, two, then three formats with real FFmpeg.
+- Real smoke completed all six outputs. Verified 1080x1920, 1080x1080, 1920x1080 resolutions, nonzero duration, audio, frame decoding, unchanged input SHA-256 hashes, and identical workspace copies.
+- Local report: storage/validation/ca0752ab-3e14-406b-ae61-771b14a1e65c/report.json. Generated media stays ignored under storage.
+- Targeted unit tests: 66 passed (11 existing Pydantic warnings). Both pages, voice.py and the smoke script compile.
+- Browser validation in progress; direct Main single-format generation with uploaded local video and WAV already completed.
+- Scope: local materials/custom audio, subtitles off, background music off. External providers/TTS/subtitles are not covered by this smoke run.

@@ -5,6 +5,8 @@ on:
     branches:
       - feature/trend-generator
     paths:
+      - "app/services/voice.py"
+      - "scripts/validate_multi_format.py"
       - "app/script_studio/**"
       - "app/video_pipeline/**"
       - "app/video_use/**"
@@ -19,6 +21,8 @@ on:
     paths:
       - "app/video_use/**"
       - "webui/Main.py"
+      - "app/services/voice.py"
+      - "scripts/validate_multi_format.py"
       - "app/script_studio/**"
       - "app/video_pipeline/**"
       - "test/script_studio/**"

@@ -49,7 +49,7 @@ def main() -> None:
     print("  [done] dedicated Multi-format Video WebUI entry point")
     print()
     print("Next:")
-    print("  Controlled Main.py integration; keep single-format behavior unchanged.")
+    print("  Continue controlled validation; Main.py integration is complete.")
     print("  Do not modify app/services/task.py.")
     print()
     print("Canonical handoff: CONTINUE.md")

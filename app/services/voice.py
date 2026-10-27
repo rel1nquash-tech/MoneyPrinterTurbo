@@ -1694,7 +1694,9 @@ def get_audio_duration(target: Union[str, SubMaker]) -> float:
     """
     if isinstance(target, SubMaker):
         return _get_audio_duration_from_submaker(target)
-    elif isinstance(target, str) and target.endswith(".mp3"):
+    # Custom uploads also support WAV, M4A, AAC, FLAC and OGG. MoviePy/FFmpeg
+    # probes the content; restricting paths to .mp3 rejects valid uploads.
+    elif isinstance(target, str):
         return _get_audio_duration_from_mp3(target)
     else:
         logger.error(f"Invalid target type: {type(target)}")
