@@ -82,10 +82,13 @@ if st.button("🚀 Generate Selected Formats", type="primary", use_container_wid
         )
         return tm.start(task_id=task_id, params=variant_params)
 
+    failures = []
     with st.spinner("Selected video formats are being generated…"):
-        results = render_variants(params, start_task, selected_formats)
+        results = render_variants(params, start_task, selected_formats, failures=failures)
 
     progress.empty()
+    for failure in failures:
+        st.warning(f"{failure.variant.key} (Task: {failure.task_id}): {failure.error}")
     if not results:
         st.error("Seçilen formatların hiçbiri başarıyla üretilemedi.")
         st.stop()
@@ -100,7 +103,7 @@ if st.button("🚀 Generate Selected Formats", type="primary", use_container_wid
 
     try:
         workspace = prepare_render_workspace(
-            base_dir=utils.task_dir(),
+            base_dir=utils.task_dir(results[0].task_id),
             render_results=results,
             subject=subject,
             script=script,

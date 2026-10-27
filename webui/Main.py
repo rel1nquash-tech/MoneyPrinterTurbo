@@ -1719,6 +1719,16 @@ with right_panel:
 
 start_button = st.button(tr("Generate Video"), use_container_width=True, type="primary")
 if start_button:
+    # Clear only output state; retain trend prefill and uploaded materials.
+    for key in tuple(st.session_state):
+        if key.startswith("completed_video_"):
+            st.session_state.pop(key, None)
+    selected_formats = (
+        selected_output_formats if enable_multi_format else [params.video_aspect.value]
+    )
+    if enable_multi_format and not selected_formats:
+        st.error("Select at least one output format.")
+        st.stop()
     config.save_config()
     task_id = str(uuid4())
     if not params.video_subject and not params.video_script:
@@ -1807,15 +1817,8 @@ if start_button:
     logger.info(utils.to_json(params))
     scroll_to_bottom()
 
-    selected_formats = (
-        selected_output_formats if enable_multi_format else [params.video_aspect.value]
-    )
-    if enable_multi_format and not selected_formats:
-        st.error("Select at least one output format.")
-        scroll_to_bottom()
-        st.stop()
-
     render_results = []
+    render_failures = []
     if enable_multi_format and len(selected_formats) > 1:
         with st.spinner("Generating selected aspect-ratio formats…"):
             render_results = render_variants(
@@ -1824,7 +1827,11 @@ if start_button:
                     task_id=render_task_id, params=variant_params
                 ),
                 selected_formats,
+                failures=render_failures,
             )
+        st.session_state["completed_video_failures"] = render_failures
+        for failure in render_failures:
+            st.warning(f"{failure.variant.key} (Task: {failure.task_id}): {failure.error}")
         if not render_results:
             st.error(tr("Video Generation Failed"))
             logger.error(tr("Video Generation Failed"))
@@ -1852,7 +1859,7 @@ if start_button:
         if enable_multi_format and selected_formats:
             params.video_aspect = VideoAspect(selected_formats[0])
         result = tm.start(task_id=task_id, params=params)
-        if not result or "videos" not in result:
+        if not result or not result.get("videos"):
             st.error(tr("Video Generation Failed"))
             logger.error(tr("Video Generation Failed"))
             scroll_to_bottom()
@@ -1867,7 +1874,13 @@ if start_button:
     st.session_state["completed_video_script"] = params.video_script
     st.success(tr("Video Generation Completed"))
     try:
-        if video_files:
+        if render_results:
+            for rendered in render_results:
+                st.subheader(f"{rendered.variant.label} ({rendered.variant.key})")
+                st.caption(f"Task: {rendered.task_id}")
+                for video_file in rendered.videos:
+                    st.video(video_file)
+        elif video_files:
             player_cols = st.columns(len(video_files) * 2 + 1)
             for i, url in enumerate(video_files):
                 player_cols[i * 2 + 1].video(url)

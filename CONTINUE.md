@@ -107,3 +107,14 @@ Initial clean local HEAD: 79a8666; fetched remote HEAD: 4f965ca. All three hando
 - Custom audio resolution accepts the existing absolute server file path; no task.py changes needed.
 - Local targeted suite after hardening: 57 passed (11 existing Pydantic deprecation warnings). Both WebUI pages compile. Additional UI changes are recorded in the next checkpoint.
 - No real FFmpeg/LLM/video generation was performed.
+
+## WebUI checkpoint (2026-10-27)
+
+- Core hardening commit: 4fa834f.
+- Main clears previous completed-video state before a new attempt; keeps prefill/material state and the direct single-format tm.start path.
+- Both pages show failed format/task/reason and successful format/task outputs. Empty selection starts no task; empty single-format output is rejected.
+- Dedicated-page workspaces are scoped to the first successful task, avoiding collisions across render sessions.
+- Added executable Main generation-block regression tests with fake UI/task services. These are not browser or real-render tests.
+- CI includes both pages' compilation and triggers for the previously omitted workspace/Main/dedicated-page paths.
+- Verification: 57 targeted tests passed; both pages compiled. Remote CI pending push.
+- Next: verify pushed CI, then manually validate one, two, and three formats with controlled source/audio inputs.
