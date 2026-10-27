@@ -124,4 +124,5 @@ Initial clean local HEAD: 79a8666; fetched remote HEAD: 4f965ca. All three hando
 - f53561c: WebUI failure reporting, stale-state reset, scoped dedicated workspace, and CI coverage; pushed successfully.
 - Expanded UI route tests to assert successful single square/landscape/portrait results and two-format partial success explicitly.
 - Final local targeted suite: 58 passed, 11 existing Pydantic warnings. No real video generation or browser interaction performed.
-- The follow-up test commit requires its own CI check; the prior implementation commit's CI is confirmed successful.
+- 940f8d6: final test follow-up pushed; GitHub Actions completed successfully: https://github.com/rel1nquash-tech/MoneyPrinterTurbo/actions/runs/40581918749. All 58 targeted tests and both page compilations passed in CI.
+- Remaining work is controlled manual video generation with one, two, then three formats; no real-render success is claimed.
