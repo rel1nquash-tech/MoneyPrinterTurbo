@@ -66,14 +66,13 @@ Do **not** continue this work directly on `main`.
 
 ## Next task
 
-Continue validating the hardened multi-format orchestration and controlled integration testing.
+Core multi-format hardening and controlled local rendering validation are complete.
 
-- Check GitHub Actions for the latest CI result, including `python -m py_compile webui/Main.py` and targeted pytest suites.
-- System Python test dependencies are now installed; targeted tests run locally.
-- Git fetch and GitHub Actions API access verified. Previous runner CI runs succeeded; new CI will be checked after push.
-- Manual UI validation remains necessary in this order: one selected format, then two formats, then all three formats.
-- Generation-block tests execute Main.py AST with fake UI/services, without importing Streamlit.
-- Do not touch `task.py`.
+- Latest implementation commit f01d9f8 passed GitHub Actions (66 targeted tests and both page compilations).
+- Main UI was exercised with one, two, and three formats using local video and custom WAV audio; outputs and workspace copies were verified.
+- Optional broader coverage: external stock providers, real speech/TTS, subtitles, and longer source clips. These were not exercised by the offline smoke test.
+- Reproduce offline validation with `.venv/Scripts/python scripts/validate_multi_format.py`; it creates real FFmpeg outputs under storage.
+- Keep task.py unchanged and preserve opt-in selection.
 
 ## Verification before continuing
 
@@ -136,3 +135,16 @@ Initial clean local HEAD: 79a8666; fetched remote HEAD: 4f965ca. All three hando
 - Targeted unit tests: 66 passed (11 existing Pydantic warnings). Both pages, voice.py and the smoke script compile.
 - Browser validation in progress; direct Main single-format generation with uploaded local video and WAV already completed.
 - Scope: local materials/custom audio, subtitles off, background music off. External providers/TTS/subtitles are not covered by this smoke run.
+
+## Browser validation completed (2026-10-28)
+
+- Resumed after the local Streamlit server stopped. Existing logs confirmed the one-format and two-format UI runs completed on October 27.
+- Three-format UI run completed October 28 with local MP4, uploaded WAV, subtitles off, background music off. The page displayed each format with its own task ID.
+- UI task IDs: single 0d6449c8-6045-4143-8b68-e6805fe53621; two-format 8f2ae551-444f-4140-a954-c2a29cec8203 / 9fcdc98f-d0cb-4bc9-b30a-5323c6da325d; three-format 44cb9080-d5d0-4c38-94c0-b8abf64e49bb / 8988d4ea-7621-4e02-b4f5-eb0bb02cae4e / cd2df91e-5e98-4ea5-b7f8-752c95310c6e.
+- Independently opened all six UI outputs with MoviePy: expected dimensions, positive duration, audio stream, and decodable first frame verified.
+- Prepared the three-format workspace through the UI. All three copies match their original output hashes; fixture video/audio hashes remain unchanged.
+- Clearing all formats and pressing Generate displayed "Select at least one output format." and removed the previous post-production output section.
+- Local evidence: storage/validation/ca0752ab-3e14-406b-ae61-771b14a1e65c/ui-report.json and ui-three-formats.png.
+- CI for f01d9f8: successful, https://github.com/rel1nquash-tech/MoneyPrinterTurbo/actions/runs/40582592635.
+- Existing Windows log encoding warnings were avoided on the resumed test server by launching Python with -X utf8. They did not prevent the prior outputs from completing.
+- No changes to main or app/services/task.py. External providers/TTS/subtitles remain outside the completed local validation scope.
