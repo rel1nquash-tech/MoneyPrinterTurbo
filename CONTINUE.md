@@ -70,7 +70,7 @@ Core multi-format hardening and controlled local rendering validation are comple
 
 - Latest implementation commit f01d9f8 passed GitHub Actions (66 targeted tests and both page compilations).
 - Main UI was exercised with one, two, and three formats using local video and custom WAV audio; outputs and workspace copies were verified.
-- Optional broader coverage: external stock providers, real speech/TTS, subtitles, and longer source clips. These were not exercised by the offline smoke test.
+- Longer sources and offline subtitle burn-in are now validated (see extended checkpoint below). External stock/TTS validation is blocked by DNS/timeouts in the current environment.
 - Reproduce offline validation with `.venv/Scripts/python scripts/validate_multi_format.py`; it creates real FFmpeg outputs under storage.
 - Keep task.py unchanged and preserve opt-in selection.
 
@@ -148,3 +148,14 @@ Initial clean local HEAD: 79a8666; fetched remote HEAD: 4f965ca. All three hando
 - CI for f01d9f8: successful, https://github.com/rel1nquash-tech/MoneyPrinterTurbo/actions/runs/40582592635.
 - Existing Windows log encoding warnings were avoided on the resumed test server by launching Python with -X utf8. They did not prevent the prior outputs from completing.
 - No changes to main or app/services/task.py. External providers/TTS/subtitles remain outside the completed local validation scope.
+
+## Extended subtitle validation (2026-10-28)
+
+- Extended scripts/validate_multi_format.py with --duration (1-30 seconds) and --subtitles. Default smoke behavior is retained. CI now compiles this script too.
+- Ran `.venv/Scripts/python -X utf8 scripts/validate_multi_format.py --duration 8 --subtitles` with the real no-voice timeline and Edge subtitle formatter; this uses no remote TTS or Whisper model.
+- One, two, then three formats completed: six actual 10-second outputs from an 8-second local source. Verified expected dimensions, audio streams, decodable frames, SRT files, unchanged source hashes and identical workspace copies.
+- Visually inspected vertical, square and landscape sample frames: subtitles are burned in and remain within the output frame.
+- Evidence: storage/validation/8ddd5bbc-fe12-4e1d-a7a1-08c57951bd34/report.json and PNG frames. This validates subtitle generation/layout with an estimated offline timeline, not speech recognition or speech-to-subtitle synchronization.
+- Local targeted suite: 66 passed, 11 existing Pydantic warnings; both pages and validation script compile.
+- External probe: Edge TTS en-US-JennyNeural timed out on all three attempts (15 seconds each). Pexels search for nature failed DNS resolution for api.pexels.com. Pixabay/Coverr are not configured. No external provider success is claimed; no credentials or persistent network settings changed.
+- Next external step: rerun provider validation once DNS/connectivity is available. Core local rendering and subtitle validation are complete; avoid repeating these runs without a relevant code change.
