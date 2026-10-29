@@ -68,9 +68,9 @@ Do **not** continue this work directly on `main`.
 
 Core multi-format hardening and controlled local rendering validation are complete.
 
-- Latest implementation commit f01d9f8 passed GitHub Actions (66 targeted tests and both page compilations).
+- Latest implementation commit 011636b passed GitHub Actions (70 targeted tests); see provider diagnostics below.
 - Main UI was exercised with one, two, and three formats using local video and custom WAV audio; outputs and workspace copies were verified.
-- Longer sources and offline subtitle burn-in are now validated (see extended checkpoint below). External stock/TTS validation is blocked by DNS/timeouts in the current environment.
+- Longer local sources, offline subtitles and real Pexels search/download/render are validated. Pexels requires process-local Windows CA trust in this environment; Edge TTS still returns HTTP 403.
 - Reproduce offline validation with `.venv/Scripts/python scripts/validate_multi_format.py`; it creates real FFmpeg outputs under storage.
 - Keep task.py unchanged and preserve opt-in selection.
 
@@ -167,4 +167,8 @@ Initial clean local HEAD: 79a8666; fetched remote HEAD: 4f965ca. All three hando
 - Direct Edge async streaming returns HTTP 403. Installed edge_tts 7.2.7 stream_sync does not propagate the worker exception and blocks its queue; the application then misleadingly reports a timeout.
 - stream_edge_tts_chunks now prefers the async stream when present, retaining the sync-only path and its timeout guard. Real service rejection still needs external resolution; this fix reports the actual error promptly.
 - Added four focused tests covering provider rejection, chunk order, async timeout and sync-only compatibility. Targeted suite: 70 passed, 11 existing Pydantic warnings. Existing service-level legacy-stream and sync-timeout regression tests also passed in .venv. Voice and both WebUI pages compile.
-- Pexels real rendering verification is running with no-voice subtitles and process-local Windows CA trust; results will be recorded after completion.
+- Pexels real search/download/render completed: one portrait task, then square + landscape through render_variants. All three outputs are 6 seconds with expected 1080x1920 / 1080x1080 / 1920x1080 dimensions, decodable frames, audio streams and SRT files. Narration used no-voice mode; real speech is not validated.
+- Evidence: storage/validation/external-probe-20261029/render-report.json and pexels-*.png. The certificate bundle and probe media remain local and ignored.
+- Verified the TTS change against the real service: all three attempts report HTTP 403 in 5.11 seconds total, rather than the previous three 15-second timeouts. Evidence: tts-after-fix.json in the same local evidence directory.
+- Implementation commit 011636b CI succeeded: https://github.com/rel1nquash-tech/MoneyPrinterTurbo/actions/runs/40950561210.
+- Remaining environment limitation: default Requests certificate roots still fail Pexels here unless REQUESTS_CA_BUNDLE points to the existing Windows-trusted CA bundle. Test-only environment adjustment was not persisted. Edge provider access remains HTTP 403. No main/task.py changes.
