@@ -6,6 +6,11 @@ on:
       - feature/trend-generator
     paths:
       - "app/services/voice.py"
+      - "app/services/material.py"
+      - "config.example.toml"
+      - "pyproject.toml"
+      - "requirements.txt"
+      - "uv.lock"
       - "scripts/validate_multi_format.py"
       - "app/script_studio/**"
       - "app/video_pipeline/**"
@@ -22,6 +27,11 @@ on:
       - "app/video_use/**"
       - "webui/Main.py"
       - "app/services/voice.py"
+      - "app/services/material.py"
+      - "config.example.toml"
+      - "pyproject.toml"
+      - "requirements.txt"
+      - "uv.lock"
       - "scripts/validate_multi_format.py"
       - "app/script_studio/**"
       - "app/video_pipeline/**"

@@ -17,7 +17,7 @@ _api_key_counter = 0
 _api_key_lock = threading.Lock()
 
 
-def _get_tls_verify() -> bool:
+def _get_tls_verify() -> bool | str:
     # 默认开启 TLS 证书校验，防止素材搜索和下载过程被中间人篡改。
     # 仅在企业代理、自签证书等明确需要的场景下，允许用户通过
     # `config.toml` 显式设置 `tls_verify = false` 临时关闭。
@@ -31,6 +31,15 @@ def _get_tls_verify() -> bool:
             "Only use this in trusted proxy environments."
         )
 
+    if tls_verify:
+        ca_bundle = str(config.app.get("tls_ca_bundle", "") or "").strip()
+        if ca_bundle:
+            ca_bundle = os.path.expanduser(ca_bundle)
+            if not os.path.isabs(ca_bundle):
+                ca_bundle = os.path.join(utils.root_dir(), ca_bundle)
+            if not os.path.isfile(ca_bundle):
+                raise ValueError("Configured tls_ca_bundle must point to an existing PEM file")
+            return os.path.abspath(ca_bundle)
     return bool(tls_verify)
 
 

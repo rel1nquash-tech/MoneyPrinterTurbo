@@ -68,9 +68,10 @@ Do **not** continue this work directly on `main`.
 
 Core multi-format hardening and controlled local rendering validation are complete.
 
-- Latest implementation commit 011636b passed GitHub Actions (70 targeted tests); see provider diagnostics below.
+- Provider recovery is implemented: Edge TTS 7.3.1 and optional verified CA bundles for stock-video requests; see the latest checkpoint below.
 - Main UI was exercised with one, two, and three formats using local video and custom WAV audio; outputs and workspace copies were verified.
-- Longer local sources, offline subtitles and real Pexels search/download/render are validated. Pexels requires process-local Windows CA trust in this environment; Edge TTS still returns HTTP 403.
+- Real Pexels + Edge speech + subtitles completed in all three formats. This machine uses an ignored local Windows-trusted CA bundle via app.tls_ca_bundle; TLS remains enabled.
+- Next acceptance step: longer Turkish narration through the WebUI, checking subtitle wrapping and speech timing. The short English provider smoke is complete.
 - Reproduce offline validation with `.venv/Scripts/python scripts/validate_multi_format.py`; it creates real FFmpeg outputs under storage.
 - Keep task.py unchanged and preserve opt-in selection.
 
@@ -172,3 +173,14 @@ Initial clean local HEAD: 79a8666; fetched remote HEAD: 4f965ca. All three hando
 - Verified the TTS change against the real service: all three attempts report HTTP 403 in 5.11 seconds total, rather than the previous three 15-second timeouts. Evidence: tts-after-fix.json in the same local evidence directory.
 - Implementation commit 011636b CI succeeded: https://github.com/rel1nquash-tech/MoneyPrinterTurbo/actions/runs/40950561210.
 - Remaining environment limitation: default Requests certificate roots still fail Pexels here unless REQUESTS_CA_BUNDLE points to the existing Windows-trusted CA bundle. Test-only environment adjustment was not persisted. Edge provider access remains HTTP 403. No main/task.py changes.
+
+## Provider recovery and real speech validation (2026-10-29)
+
+- Updated edge-tts from 7.2.7 to 7.3.1 in pyproject.toml, requirements.txt and uv.lock. Upstream service-protocol changes resolve the observed HTTP 403 here: https://github.com/rany2/edge-tts/releases. The existing async exception/timeout handling remains intact.
+- Added optional app.tls_ca_bundle for stock-video API searches/downloads. Relative paths resolve from the repository root; missing files fail explicitly. Default verification and explicit legacy tls_verify=false behavior remain compatible.
+- This machine's ignored config.toml now points to storage/certs/windows-trusted-ca.pem, copied from the previously validated Windows trust export. No REQUESTS_CA_BUNDLE override was used for this run; TLS verification stayed enabled. Neither local configuration nor certificates are committed.
+- Real Pexels + en-US-JennyNeural speech + Edge subtitles succeeded: direct single portrait, then square and landscape through render_variants. Three actual 3-second videos have the expected dimensions, audio and decodable frames. Speech tracks are non-silent; subtitle text matches the script and timestamps fall within speech duration. Portrait/landscape frames were visually checked. No subjective listening/synchronization judgment is claimed.
+- Evidence: storage/validation/edge-731/render-report.json, render.log and pexels-*.png. Automatic upload was disabled in the validation process.
+- Verification: 75 targeted tests passed (11 existing Pydantic warnings), 7 service regression tests passed; material/voice/Main compile. uv lock --check --offline passes with the focused lock update. CI path filters now cover material/config/dependency changes.
+- Restarted local Streamlit with the updated environment at http://127.0.0.1:8501/; health endpoint returns ok. task.py and main remain unchanged.
+- Scope: short English speech with Pexels. Longer Turkish speech, additional stock providers and Whisper remain outside this checkpoint.

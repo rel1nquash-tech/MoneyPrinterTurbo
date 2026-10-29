@@ -14,6 +14,10 @@ edge_tts_timeout = 30
 # 默认必须开启，避免 Pexels/Pixabay API key 和下载素材被中间人攻击篡改。
 # 只有在企业代理或自签证书环境明确需要时，才临时改为 false。
 tls_verify = true
+# Optional PEM CA bundle for stock-video API searches and downloads.
+# Relative paths resolve from the project root. Keep tls_verify = true.
+# Use a bundle supplied by your administrator or your OS trusted roots.
+tls_ca_bundle = ""
 
 # Pexels API Key
 # Register at https://www.pexels.com/api/ to get your API key.
