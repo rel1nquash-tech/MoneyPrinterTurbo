@@ -686,7 +686,10 @@ def stream_edge_tts_chunks(
         on_chunk: 每拿到一个事件块时执行的回调
         timeout_seconds: 单次流式请求总超时；为 None 时不启用超时。
     """
-    if hasattr(communicate, "stream_sync"):
+    # Prefer the async stream when available: edge_tts 7.2.7's synchronous
+    # wrapper can strand queue.get() when its worker raises (for example 403),
+    # masking the provider error as a timeout. Keep sync-only compatibility.
+    if hasattr(communicate, "stream_sync") and not hasattr(communicate, "stream"):
         if timeout_seconds:
             _stream_edge_tts_sync_with_timeout(
                 communicate, on_chunk, timeout_seconds

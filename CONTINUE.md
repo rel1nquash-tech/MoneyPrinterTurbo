@@ -159,3 +159,12 @@ Initial clean local HEAD: 79a8666; fetched remote HEAD: 4f965ca. All three hando
 - Local targeted suite: 66 passed, 11 existing Pydantic warnings; both pages and validation script compile.
 - External probe: Edge TTS en-US-JennyNeural timed out on all three attempts (15 seconds each). Pexels search for nature failed DNS resolution for api.pexels.com. Pixabay/Coverr are not configured. No external provider success is claimed; no credentials or persistent network settings changed.
 - Next external step: rerun provider validation once DNS/connectivity is available. Core local rendering and subtitle validation are complete; avoid repeating these runs without a relevant code change.
+
+## Provider diagnostics and TTS error propagation (2026-10-29)
+
+- Confirmed CI success for 5e65d06: https://github.com/rel1nquash-tech/MoneyPrinterTurbo/actions/runs/40682366494.
+- DNS now resolves Pexels and Bing Speech. Default Python requests to Pexels fail certificate-chain validation. A test-process-only REQUESTS_CA_BUNDLE built from Windows' existing trusted certificates succeeds (19 portrait search results). TLS verification remains enabled; no persistent trust/config changes were made.
+- Direct Edge async streaming returns HTTP 403. Installed edge_tts 7.2.7 stream_sync does not propagate the worker exception and blocks its queue; the application then misleadingly reports a timeout.
+- stream_edge_tts_chunks now prefers the async stream when present, retaining the sync-only path and its timeout guard. Real service rejection still needs external resolution; this fix reports the actual error promptly.
+- Added four focused tests covering provider rejection, chunk order, async timeout and sync-only compatibility. Targeted suite: 70 passed, 11 existing Pydantic warnings. Existing service-level legacy-stream and sync-timeout regression tests also passed in .venv. Voice and both WebUI pages compile.
+- Pexels real rendering verification is running with no-voice subtitles and process-local Windows CA trust; results will be recorded after completion.
