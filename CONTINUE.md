@@ -184,3 +184,9 @@ Initial clean local HEAD: 79a8666; fetched remote HEAD: 4f965ca. All three hando
 - Verification: 75 targeted tests passed (11 existing Pydantic warnings), 7 service regression tests passed; material/voice/Main compile. uv lock --check --offline passes with the focused lock update. CI path filters now cover material/config/dependency changes.
 - Restarted local Streamlit with the updated environment at http://127.0.0.1:8501/; health endpoint returns ok. task.py and main remain unchanged.
 - Scope: short English speech with Pexels. Longer Turkish speech, additional stock providers and Whisper remain outside this checkpoint.
+
+## CI follow-up (2026-10-30)
+
+- Provider recovery commit 1b1acb6 passed GitHub Actions: https://github.com/rel1nquash-tech/MoneyPrinterTurbo/actions/runs/40952010685.
+- Resumed on feature/trend-generator with a clean working tree. The local Streamlit process had stopped and was relaunched using the project virtual environment.
+- Next acceptance step remains longer Turkish narration through the WebUI; this follow-up does not claim that validation is complete.
