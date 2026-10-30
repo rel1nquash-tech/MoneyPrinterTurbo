@@ -71,7 +71,7 @@ Core multi-format hardening and controlled local rendering validation are comple
 - Provider recovery is implemented: Edge TTS 7.3.1 and optional verified CA bundles for stock-video requests; see the latest checkpoint below.
 - Main UI was exercised with one, two, and three formats using local video and custom WAV audio; outputs and workspace copies were verified.
 - Real Pexels + Edge speech + subtitles completed in all three formats. This machine uses an ignored local Windows-trusted CA bundle via app.tls_ca_bundle; TLS remains enabled.
-- Next acceptance step: longer Turkish narration through the WebUI, checking subtitle wrapping and speech timing. The short English provider smoke is complete.
+- Turkish direct-pipeline validation is complete; browser acceptance, narration loudness and subjective synchronization remain pending. See the latest checkpoint.
 - Reproduce offline validation with `.venv/Scripts/python scripts/validate_multi_format.py`; it creates real FFmpeg outputs under storage.
 - Keep task.py unchanged and preserve opt-in selection.
 
@@ -190,3 +190,13 @@ Initial clean local HEAD: 79a8666; fetched remote HEAD: 4f965ca. All three hando
 - Provider recovery commit 1b1acb6 passed GitHub Actions: https://github.com/rel1nquash-tech/MoneyPrinterTurbo/actions/runs/40952010685.
 - Resumed on feature/trend-generator with a clean working tree. The local Streamlit process had stopped and was relaunched using the project virtual environment.
 - Next acceptance step remains longer Turkish narration through the WebUI; this follow-up does not claim that validation is complete.
+
+## Turkish narration pipeline validation (2026-10-30)
+
+- Completed direct pipeline validation after Windows browser automation could not verify the current URL. This was not a WebUI acceptance run.
+- Pexels + tr-TR-EmelNeural produced three 21-second videos: direct portrait first, then square/landscape via render_variants. Expected resolutions, audio streams and decodable frames were verified. Auto-upload was disabled in the probe process.
+- Each speech track is 20.88 seconds; six ordered subtitle cues finish at 19.85 seconds. Turkish characters render correctly. The long sentence fits within all frames: four lines in portrait/square, two in landscape. The square subtitle occupies roughly the lower third of the picture.
+- An initial amplitude assertion (>0.01) failed for landscape (0.009735); all three tracks contain nonzero samples, but sampled peaks were low (approximately 0.0097-0.0112). Loudness and subjective synchronization remain unverified and need follow-up; no audio-quality pass is claimed.
+- Evidence: storage/validation/turkish-20261030/render-report.json and long-*.png; probe storage/validation/turkish_render_probe.py; log storage/validation/turkish-render.log. These remain ignored local artifacts.
+- No application code changed, so the previously passing 75-test suite was not rerun. task.py remains unchanged.
+- Next: investigate narration loudness, consider shorter subtitle cues for square output, and complete browser acceptance when UI automation is available.
