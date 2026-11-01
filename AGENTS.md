@@ -19,7 +19,7 @@ Before making changes, read `CONTINUE.md` and run `python scripts/continue_dev.p
 
 The project is adding opt-in multi-format video generation for 9:16, 1:1, and 16:9. The current foundation lives in `app/video_pipeline/` and the post-production workspace integration lives in `app/video_use/workspace.py`.
 
-The isolated UI page is `webui/pages/🎬 Multi-format Video.py`. The next planned milestone is a controlled integration into `webui/Main.py`.
+The isolated UI page is `webui/pages/🎬 Multi-format Video.py`. Controlled integration into `webui/Main.py` is complete. Current follow-up: investigate narration loudness and synchronization, evaluate long square-format captions, and complete Turkish WebUI acceptance when available.
 
 ## Required behavior for Main.py integration
 
@@ -33,7 +33,8 @@ The isolated UI page is `webui/pages/🎬 Multi-format Video.py`. The next plann
 
 ## Testing expectations
 
-- Add focused tests for behavior changes.
+- Add focused tests for behavior changes. During development, run tests relevant to the change; complete the required Sprint 6 suite before claiming completion.
+- Reuse existing validation evidence and repeat long renders only when relevant changes or unresolved checks require them.
 - Run relevant tests before claiming completion.
 - At minimum, run `python -m pytest test/video_pipeline test/video_use test/script_studio -q` for Sprint 6 changes when the environment permits.
 - If tests cannot run, state that clearly and do not claim they passed.
