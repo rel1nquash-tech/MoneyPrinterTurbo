@@ -11,7 +11,7 @@ Before changes, run `python scripts/continue_dev.py` from the repository root. W
 
 ## Next task
 
-FFmpeg volumedetect on all three existing Turkish outputs reports narration mean/peak -19.5/-3.1 dBFS and final-video mean/peak -22.6/-6.1 dBFS. The earlier 8 kHz sampling result understated the peaks. Listen to assess perceived loudness and speech/subtitle synchronization; numerical peak measurements alone do not establish either. Assess whether long square-format captions should be split. Complete Turkish WebUI acceptance when browser automation is available; previous browser automation could not verify the current URL.
+FFmpeg volumedetect on all three existing Turkish outputs reports narration mean/peak -19.5/-3.1 dBFS and final-video mean/peak -22.6/-6.1 dBFS. The earlier 8 kHz sampling result understated the peaks. Listen to assess perceived loudness and speech/subtitle synchronization; numerical peak measurements alone do not establish either. Long square-format captions arise because `voice.create_subtitle()` aggregates Edge word cues into punctuation-delimited script lines. Any future opt-in splitting should preserve word-cue timing and existing defaults; assess readability before changing behavior. Complete Turkish WebUI acceptance when browser automation is available; the in-app browser currently lists the tab but its automation binding reports `browser.user is unavailable`.
 
 Reuse existing evidence before rendering again: `storage/validation/turkish-20261030/render-report.json` and its sample frames. These are local ignored artifacts and may not exist on other machines. Only repeat long renders when relevant changes or unresolved validation require them.
 
