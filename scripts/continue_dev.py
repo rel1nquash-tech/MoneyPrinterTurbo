@@ -50,7 +50,7 @@ def main() -> None:
     print()
     print("Next:")
     print("  Investigate narration loudness and synchronization; assess long square captions.")
-    print("  Complete Turkish WebUI acceptance when browser automation is available.")
+    print("  Listen to assess Turkish narration and subtitle synchronization.")
     print("  Do not modify app/services/task.py.")
     print()
     print("Canonical handoff: CONTINUE.md")
