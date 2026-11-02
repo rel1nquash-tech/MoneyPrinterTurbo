@@ -19,7 +19,7 @@ Before making changes, read `CONTINUE.md` and run `python scripts/continue_dev.p
 
 The project is adding opt-in multi-format video generation for 9:16, 1:1, and 16:9. The current foundation lives in `app/video_pipeline/` and the post-production workspace integration lives in `app/video_use/workspace.py`.
 
-The isolated UI page is `webui/pages/🎬 Multi-format Video.py`. Controlled integration into `webui/Main.py` is complete. Current follow-up: investigate narration loudness and synchronization, evaluate long square-format captions, and complete Turkish WebUI acceptance when available.
+The isolated UI page is `webui/pages/🎬 Multi-format Video.py`. Controlled integration into `webui/Main.py` is complete. Controlled local, provider and WebUI checks are recorded in CONTINUE.md. Prefer English content, narration and subtitles. Remaining acceptance is listening feedback; shorter square-format captions are an optional improvement, not a reason to repeat completed renders.
 
 ## Required behavior for Main.py integration
 
